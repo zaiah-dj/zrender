@@ -1,0 +1,10 @@
+
+- check balance of renders (things should not fail if the syntax is right)
+
+- consider using strerror?
+
+- get rid of zTable * as primary argument and use void * instead.
+
+- use function pointers instead of big, hard-to-follow blocks
+
+- then try tests again
