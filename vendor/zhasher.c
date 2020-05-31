@@ -156,14 +156,33 @@ unsigned char *lt_get_full_key ( zTable *t, int hash, unsigned char *buf, int bs
 
 
 //Trim things
-unsigned char *lt_trim ( uint8_t *msg, char *trim, int len, int *nlen ) {
+unsigned char *lt_trim ( uint8_t *msg, const char *trim, int len, int *nlen ) {
 	//Define stuff
 	uint8_t *m = msg;
-	int nl= len;
+	uint8_t *forwards = msg;
+	uint8_t *backwards = &msg[ len - 1 ];
+	int nl = len;
+	int tl = strlen( trim );
+#if 0
 	//Move forwards and backwards to find whitespace...
 	while ( memchr(trim, *(m + ( nl - 1 )), 4) && nl-- ) ; 
 	while ( memchr(trim, *m, 4) && nl-- ) m++;
+#else
+	fprintf( stderr, "original length: %d\n", nl );
+	while ( nl ) {
+		int dobreak = 1;
+		if ( memchr( trim, *msg, tl ) )
+			msg++, nl--, dobreak = 0;
+		if ( memchr( trim, *backwards, tl ) )
+			backwards--, nl--, dobreak = 0;
+		if ( dobreak ) {
+			break;
+		}	
+	}
+	fprintf( stderr, "new length: %d\n", nl );
+#endif
 	*nlen = nl;
+	msg = forwards;
 	return m;
 }
 

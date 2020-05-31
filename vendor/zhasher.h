@@ -323,7 +323,7 @@ const char *lt_strerror (zTable *);
 void lt_clearerror (zTable *);
 void lt_setsrc (zTable *, void *);
 void lt_free (zTable *);
-unsigned char *lt_trim (uint8_t *, char *, int, int *);
+unsigned char *lt_trim (uint8_t *, const char *, int, int *);
 zKeyval *lt_items_i (zTable *, uint8_t *, int);
 zKeyval *lt_items_by_index (zTable *, int);
 int lt_count_elements ( zTable *, int);

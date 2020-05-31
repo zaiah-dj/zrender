@@ -584,7 +584,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 1
+	#if 0
 	{
 		DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test",
 		//Notice the cities.metadata loop block.  Teset for short and long keys...

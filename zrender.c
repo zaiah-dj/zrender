@@ -37,6 +37,7 @@ struct map * init_map () {
 		return NULL;
 	}
 
+	memset( rp, 0, sizeof( struct map ) );
 	rp->action = 0; 
 	rp->ptr = NULL; 
 	rp->len = 0; 
@@ -87,16 +88,16 @@ int * copy_int ( int i ) {
 
 #if 1
 
-void map_raw_extract( struct map *row, struct map **parent, uint8_t *ptr, int len, void *t ) {
+void map_raw_extract( struct map *row, struct map ***parent, uint8_t *ptr, int len, void *t ) {
 	RPRINTF( "RAW", ptr, len ); 
 	row->ptr = ptr;
 	row->len = len;
 	row->action = RAW;
 }
 
-void map_simple_extract( struct map *row, struct map **parent, uint8_t *ptr, int len, void *t ) {
+void map_simple_extract( struct map *row, struct map ***parent, uint8_t *ptr, int len, void *t ) {
 	zTable *tt = (zTable *)t;
-	int hlen=0, hash = lt_get_long_i( t, ptr, len ); 
+	int hlen=0, hash = lt_get_long_i( tt, ptr, len ); 
 	if ( hash > -1 ) {
 		add_item( &row->hashList, copy_int( hash ), int *, &hlen );
 	}
@@ -104,7 +105,8 @@ void map_simple_extract( struct map *row, struct map **parent, uint8_t *ptr, int
 }
 
 
-void map_loop_start( struct map *row, struct map **parent, uint8_t *ptr, int len, void *t ) {
+//...
+void map_loop_start( struct map *row, struct map ***parent, int *plen, uint8_t *ptr, int len, void *t ) {
 	int hash = -1;
 	int hlen = 0;
 	int blen = 0;
@@ -114,10 +116,9 @@ void map_loop_start( struct map *row, struct map **parent, uint8_t *ptr, int len
 	RPRINTF( "LOOP_START", ptr, len );
 
 	//If a parent should exist, copy the parent's text 
-	if ( !parent ) {
+	if ( !( *parent ) ) {
 		//Copy the data
-		memcpy( bbuf, ptr, len );
-		blen += len;
+		memcpy( bbuf, ptr, blen = len );
 
 		//Get the hash
 		if ( ( hash = lt_get_long_i( tt, bbuf, blen ) ) > -1 ) {
@@ -128,7 +129,7 @@ void map_loop_start( struct map *row, struct map **parent, uint8_t *ptr, int len
 	else {
 		//Get a count of the number of elements in the parent.
 		int maxCount = 0;
-#if 1
+#if 0
 		for ( int i=0, cCount=0; i < (*parent)->children; i++ ) {
 	#if 0
 			//All of this is stupid, it should just be:
@@ -173,23 +174,20 @@ void map_loop_start( struct map *row, struct map **parent, uint8_t *ptr, int len
 		}
 	#endif
 		row->len = eCount = maxCount;
+#endif
 	}
-
-#if 0
-	row->len = eCount;
 
 	//Find the hash
-	if ( hashListLen ) {
-		struct parent *np = init_parent(); 
+	if ( hlen ) {
+		struct map *np = init_map(); 
 		//NOTE: len will contain the number of elements to loop
-		np->childCount = eCount;
-		np->len = alen;
-		np->text = p; 
-		add_item( &pp, np, struct parent *, &pplen );
-		INSIDE++;
+		np->children = eCount;
+		np->len = blen;
+		np->ptr = ptr; 
+		FPRINTF( "Parent: %p, length: %d\n", *parent, *plen );
+		add_item( parent, np, struct parent *, plen );
+		FPRINTF( "Parent: %p, length: %d\n", *parent, *plen );
 	}
-#endif
-#endif
 }
 
 void map_each_key() {
@@ -201,39 +199,45 @@ void map_execute() {
 void map_boolean() {
 }
 
-void map_complex_extract( struct map *row, struct map **parent, uint8_t *ptr, int len, void *t ) {
+void map_complex_extract( struct map *row, struct map ***parent, int *plen, uint8_t *ptr, int len, void *t ) {
 	RPRINTF( "COMPLEX", ptr, len );
-#if 0
-	if ( pplen ) {
-		struct parent **w = pp;
+	FPRINTF( "plen: %d\n", *plen );
+	if ( *plen ) {
 		int c = 0;
-		while ( (*w)->pos < (*w)->childCount ) {
+		int hlen = 0;
+		int pos = 0;
+		struct map **w = &( *parent )[ *plen - 1 ]; FPRINTF( "ptr: %p, len: %d\n", w, *plen );
+		//struct map **pw = *parent; FPRINTF( "ptr: %p, len: %d\n", pw, *plen );
+		FPRINTF( "pos: %d, children: %d\n", (*w)->pos, (*w)->children );
+ 
+		while ( (*w)->pos < (*w)->children ) {
+#if 1
 			//Move to the next block or build a sequence
-			if ( c < (pplen - 1) ) {
+			if ( c < (*plen - 1) ) {
 				w++, c++;
 				continue;
 			}
 			
 			//Generate the hash strings
 			if ( 1 ) {
-				struct parent **xx = pp;
+				struct map **xx = *parent;
 				uint8_t tr[ 2048 ] = { 0 };
 				int trlen = 0;
 				
-				for ( int ii=0; ii < pplen; ii++ ) {
-					memcpy( &tr[ trlen ], (*xx)->text, (*xx)->len );
+				for ( int ii=0; ii < *plen; ii++ ) {
+					memcpy( &tr[ trlen ], (*xx)->ptr, (*xx)->len );
 					trlen += (*xx)->len;
 					trlen += sprintf( (char *)&tr[ trlen ], ".%d.", (*xx)->pos );
 					xx++;
 				}
-				memcpy( &tr[ trlen ], p, alen );
-				trlen += alen;
+				memcpy( &tr[ trlen ], ptr, len );
+				trlen += len;
 
 				//TODO: Replace me with copy_int or a general copy_ macro
 				//Check for this hash, save each and dump the list...
 				int hh = lt_get_long_i( t, tr, trlen );
 #if 1
-				add_item( &rp->hashList, copy_int( hh ), int *, &hashListLen ); 
+				add_item( &row->hashList, copy_int( hh ), int *, &hlen ); 
 #else									
 				int *h = malloc( sizeof(int) );
 				memcpy( h, &hh, sizeof(int) );	
@@ -249,7 +253,7 @@ void map_complex_extract( struct map *row, struct map **parent, uint8_t *ptr, in
 				if ( c == 0 )
 					break;
 				else { // ( c > 0 )
-					if ( (*w)->pos < (*w)->childCount ) 
+					if ( (*w)->pos < (*w)->children ) 
 						break;
 					else {
 						(*w)->pos = 0;
@@ -257,30 +261,27 @@ void map_complex_extract( struct map *row, struct map **parent, uint8_t *ptr, in
 					}
 				}
 			}
+#endif
 		}
 		(*w)->pos = 0;
 	}
-#endif
 }
 
-void map_loop_end( struct map *row, struct map **parent, uint8_t *ptr, int len, void *t ) {
+
+//....
+void map_loop_end( struct map *row, struct map ***parent, int *plen, uint8_t *ptr, int len, void *t ) {
 	RPRINTF( "LOOP_END", ptr, len );
-	//rp->hash = lt_get_long_i( t, p, alen );
-#if 0
-	if ( !INSIDE )
-		;
-	else if ( pplen == INSIDE ) {
-		free( pp[ pplen - 1 ] );
-		pplen--;
-		INSIDE--;
-	}
-#endif
-	if ( parent ) {
-		free( *parent );
-		parent--;
+	FPRINTF( "Parent: %p  length: %d\n", parent, *plen );
+	if ( *parent ) {
+		//free( &( *parent )[ *plen ] );
+		parent--; 
+		(*plen)--;
+		FPRINTF( "Parent: %p, length: %d\n", *parent, *plen );
 	}
 }
 
+
+//....
 void extract_raw( struct map *row, uint8_t *ptr, int len ) {
 	row->ptr = ptr;
 	row->len = len;
@@ -305,12 +306,33 @@ void extract_boolean() {
 
 
 
-//...
+//Trim an unsigned character block 
+uint8_t *zrender_trim ( uint8_t *msg, const char *trim, int len, int *nlen ) {
+	//Define stuff
+	//uint8_t *m = msg;
+	uint8_t *forwards = msg;
+	uint8_t *backwards = &msg[ len - 1 ];
+	int nl = len;
+	int tl = strlen( trim );
+	while ( nl ) {
+		int dobreak = 1;
+		if ( memchr( trim, *forwards, tl ) )
+			forwards++, nl--, dobreak = 0;
+		if ( memchr( trim, *backwards, tl ) )
+			backwards--, nl--, dobreak = 0;
+		if ( dobreak ) {
+			break;
+		}	
+	}
+	*nlen = nl;
+	return forwards;
+}
+
+
 //Check that the data is balanced.
 int zrender_check_balance ( const uint8_t *src, int srclen ) {
 
 	//This is the syntax to check for...
-	const char *start = "{{", *end = "}}";
 	zWalker r;
 	memset( &r, 0, sizeof( zWalker ) );
 	//Check these counts at the end...	
@@ -349,6 +371,7 @@ struct map ** zrender_table_to_map ( void *t, const uint8_t *src, int srclen ) {
 	//Allocating a list of characters to elements is easiest.
 	while ( memwalk( &r, (uint8_t *)src, (uint8_t *)"{}", srclen, 2 ) ) {
 		//More than likely, I'll always use a multi-byte delimiter
+		//FPRINTF( "MOTION == %s\n", DUMPACTION( rp->action ) );
 		if ( r.size == 0 ) {
 			//Check if there is a start or end block
 			if ( r.chr == '{' ) {
@@ -366,35 +389,23 @@ struct map ** zrender_table_to_map ( void *t, const uint8_t *src, int srclen ) {
 		}
 		else if ( src[ r.pos + r.size + 1 ] == '}' ) {
 			//Start extraction...
-			BLOCK = BLOCK_END;
 			int alen=0, nlen = 0;	
 			struct map *rp = init_map();
-			uint8_t *p = lt_trim( (uint8_t *)&src[r.pos], " ", r.size, &nlen );
-			int action = maps[ *p ];
-			FPRINTF( "CHAR: '%c' %d %d\n", *p, maps[ *p ], action );
-#if 0
-			//Extract the first character
-			if ( maps[ *p ] == 0 ) {
-				map_simple_extract( rp, NULL, p, nlen, t );
-			}
-			else {
-			}
-#endif
-				//Advance and reset p b/c we need just the text...
+			uint8_t *p = zrender_trim( (uint8_t *)&src[ r.pos ], " ", r.size, &nlen );
+			//FPRINTF( "CHAR: '%c' %d %d\n", *p, maps[ *p ], action );
 			rp->action = maps[ *p ];
-			p = lt_trim( p, ". #/$`!\t", nlen, &alen );
-			FPRINTF( "ACTION == %s\n", DUMPACTION( rp->action ) );
+			p = zrender_trim( p, ". #/$`!\t", nlen, &alen );
+			FPRINTF( "ACTION == %s, %p, %d, %d\n", DUMPACTION( rp->action ), p, nlen, alen );
 
-#if 0
 			//Figure some things out...
 			if ( rp->action == LOOP_START ) {
-				map_loop_start( rp, pr, p, alen, t );
+				map_loop_start( rp, &pr, &pplen, p, alen, t );
 			}
 			else if ( rp->action == LOOP_END ) {
-				map_loop_end( rp, pr, p, alen, t );
+				map_loop_end( rp, &pr, &pplen, p, alen, t );
 			}
 			else if ( rp->action == COMPLEX_EXTRACT ) {
-				map_complex_extract( rp, pr, p, alen, t );
+				map_complex_extract( rp, &pr, &pplen, p, alen, t );
 			}
 			else if ( rp->action == EACH_KEY ) {
 				FPRINTF( "@EACH_KEY :: Nothing yet...\n" );
@@ -410,7 +421,6 @@ struct map ** zrender_table_to_map ( void *t, const uint8_t *src, int srclen ) {
 			}
 
 			add_item( &rr, rp, struct map *, &rrlen );
-#endif
 		}
 	}
 
@@ -447,7 +457,7 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 				BLOCK = BLOCK_END;
 				int nlen = 0;	
 				int hashListLen = 0;
-				uint8_t *p = lt_trim( (uint8_t *)&src[r.pos], " ", r.size, &nlen );
+				uint8_t *p = zrender_trim( (uint8_t *)&src[r.pos], " ", r.size, &nlen );
 				struct map *rp = init_map();
 
 				//Extract the first character
@@ -462,7 +472,7 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 					//Advance and reset p b/c we need just the text...
 					int alen = 0;
 					rp->action = maps[ *p ];
-					p = lt_trim( p, ". #/$`!\t", nlen, &alen );
+					p = zrender_trim( p, ". #/$`!\t", nlen, &alen );
 					FPRINTF("GOT ACTION %s, and TEXT = ", DUMPACTION(rp->action)); ENCLOSE( p, 0, alen );
 
 					//Figure some things out...

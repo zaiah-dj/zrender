@@ -45,9 +45,10 @@ struct map {
 	int action; 
 	int **hashList; 
 	int len; 
+	int pos; 
 	void *ptr; 
 	int children; 
-	struct parent *parent;
+	struct map *parent;
 };
 
 //static?
