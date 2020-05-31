@@ -17,18 +17,18 @@
 	( NUM == RAW ) ? "RAW" : "UNKNOWN" 
 
 enum {
+	RAW = 0,
 	LOOP_START = 30,
-	LOOP_END,
-	SIMPLE_EXTRACT,
-	COMPLEX_EXTRACT,
-	EACH_KEY,
-	EXECUTE,
-	BOOLEAN,
-	RAW,
-	BLOCK_START = 0,
-	BLOCK_END = 0,
+	LOOP_END = 31,
+	SIMPLE_EXTRACT = 32,
+	COMPLEX_EXTRACT = 33,
+	EACH_KEY = 34,
+	EXECUTE = 35,
+	BOOLEAN = 36,
+	BLOCK_START = 100,
+	BLOCK_END = 101,
 	TERM = -2,
-	UNINIT = 166,
+	UNINIT = 127,
 };
 
 struct parent { 
@@ -46,6 +46,8 @@ struct map {
 	int **hashList; 
 	int len; 
 	void *ptr; 
+	int children; 
+	struct parent *parent;
 };
 
 //static?
