@@ -60,6 +60,11 @@ uint8_t *table_to_uint8t( zTable *, const uint8_t *, int, int * );
 //public?
 int zrender_check_balance ( const uint8_t *, int );
 void zrender_free_table( struct map **map );
+#if 0
+int * zrender_copy_int ( int i ) {
+uint8_t *zrender_trim ( uint8_t *msg, const char *trim, int len, int *nlen ) {
+struct map ** zrender_table_to_map ( void *t, const uint8_t *src, int srclen ) {
+#endif
 
 #ifdef DEBUG_H
 void zrender_print_table ( struct map ** );

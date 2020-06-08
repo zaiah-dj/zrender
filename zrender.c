@@ -14,6 +14,11 @@ get the last block from whatever body
 
 */
 
+#ifdef DEBUG_H
+static int di = 0;
+#endif
+
+int INSIDE = 0;
 
 #define RPRINTF(a,b,blen) \
 	memset( rprintchar, 0, sizeof(rprintchar) ); \
@@ -43,7 +48,6 @@ static char * replace_chars ( char *src, int srclen ) {
 	return src;
 }
 
-int INSIDE = 0;
 
 struct map * init_map () {
 	struct map *rp = malloc( sizeof( struct map ) );
@@ -78,10 +82,6 @@ struct parent * init_parent() {
 
 
 
-#ifdef DEBUG_H
-static int di = 0;
-#endif
-
 #if 0
 static const int maps[] = {
 	['#'] = { LOOP_START, map_start, proc_start } //easier if you just extract at beginning
@@ -95,7 +95,7 @@ static const int maps[] = {
 };
 #endif
 
-int * copy_int ( int i ) {
+int * zrender_copy_int ( int i ) {
 	int *h = malloc( sizeof ( int ) );
 	memcpy( h, &i, sizeof( int ) );
 	return h; 
@@ -114,7 +114,7 @@ void map_simple_extract( struct map *row, struct map ***parent, uint8_t *ptr, in
 	zTable *tt = (zTable *)t;
 	int hlen=0, hash = lt_get_long_i( tt, ptr, len ); 
 	if ( hash > -1 ) {
-		add_item( &row->hashList, copy_int( hash ), int *, &hlen );
+		add_item( &row->hashList, zrender_copy_int( hash ), int *, &hlen );
 	}
 	row->action = SIMPLE_EXTRACT; 
 }
@@ -138,7 +138,7 @@ FPRINTF( "no parent\n" );
 
 		//Get the hash
 		if ( ( hash = lt_get_long_i( tt, bbuf, blen ) ) > -1 ) {
-			add_item( &row->hashList, copy_int( hash ), int *, &hlen );
+			add_item( &row->hashList, zrender_copy_int( hash ), int *, &hlen );
 			//row->len = lt_counti( tt, hash );
 			row->children = element_count = lt_counti( tt, hash );
 		}
@@ -168,7 +168,7 @@ FPRINTF( "struct map: %p", cp );
 			memcpy( &bbuf[ blen ], ptr, len );
 			blen += len;
 			hash = lt_get_long_i( tt, bbuf, blen );
-			add_item( &row->hashList, copy_int( hash ), int *, &hlen ); 
+			add_item( &row->hashList, zrender_copy_int( hash ), int *, &hlen ); 
 		
 			if ( hash > -1 && (cCount = lt_counti( tt, hash )) > maxCount ) {
 				maxCount = cCount;	
@@ -191,7 +191,7 @@ FPRINTF( "struct map: %p", cp );
 			memcpy( &bbuf[ blen ], p, alen );
 			blen += alen;
 			hash = lt_get_long_i(t, bbuf, blen );
-			add_item( &row->hashList, copy_int( hash ), int *, &hashListLen ); 
+			add_item( &row->hashList, zrender_copy_int( hash ), int *, &hashListLen ); 
 		
 			if ( hash > -1 && (cCount = lt_counti( t, hash )) > maxCount ) {
 				maxCount = cCount;	
@@ -261,12 +261,12 @@ void map_complex_extract( struct map *row, struct map ***parent, int *plen, uint
 			memcpy( &tr[ trlen ], ptr, len );
 			trlen += len;
 
-			//TODO: Replace me with copy_int or a general copy_ macro
+			//TODO: Replace me with zrender_copy_int or a general copy_ macro
 			//Check for this hash, save each and dump the list...
 			int hh = lt_get_long_i( t, tr, trlen );
 FPRINTF( "Hash: %d\n", hh );
 #if 1
-			add_item( &row->hashList, copy_int( hh ), int *, &hlen ); 
+			add_item( &row->hashList, zrender_copy_int( hh ), int *, &hlen ); 
 #else									
 			int *h = malloc( sizeof(int) );
 			memcpy( h, &hh, sizeof(int) );	
@@ -629,7 +629,7 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 					rp->action = SIMPLE_EXTRACT; 
 					int hash = lt_get_long_i( t, p, nlen ); 
 					if ( hash > -1 ) {
-						add_item( &rp->hashList, copy_int( hash ), int *, &hashListLen );
+						add_item( &rp->hashList, zrender_copy_int( hash ), int *, &hashListLen );
 					}
 				}
 				else {
@@ -654,7 +654,7 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 							memcpy( &bbuf[ blen ], p, alen );
 							blen += alen;
 							if ( ( hash = lt_get_long_i(t, bbuf, blen) ) > -1 ) {
-								add_item( &rp->hashList, copy_int( hash ), int *, &hashListLen );
+								add_item( &rp->hashList, zrender_copy_int( hash ), int *, &hashListLen );
 								eCount = lt_counti( t, hash );
 							}
 						}
@@ -675,7 +675,7 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 								memcpy( &bbuf[ blen ], p, alen );
 								blen += alen;
 								hash = lt_get_long_i(t, bbuf, blen );
-								add_item( &rp->hashList, copy_int( hash ), int *, &hashListLen ); 
+								add_item( &rp->hashList, zrender_copy_int( hash ), int *, &hashListLen ); 
 							
 								if ( hash > -1 && (cCount = lt_counti( t, hash )) > maxCount ) {
 									maxCount = cCount;	
@@ -737,11 +737,11 @@ struct map **table_to_map ( zTable *t, const uint8_t *src, int srclen ) {
 									memcpy( &tr[ trlen ], p, alen );
 									trlen += alen;
 
-									//TODO: Replace me with copy_int or a general copy_ macro
+									//TODO: Replace me with zrender_copy_int or a general copy_ macro
 									//Check for this hash, save each and dump the list...
 									int hh = lt_get_long_i( t, tr, trlen );
 #if 1
-									add_item( &rp->hashList, copy_int( hh ), int *, &hashListLen ); 
+									add_item( &rp->hashList, zrender_copy_int( hh ), int *, &hashListLen ); 
 #else									
 									int *h = malloc( sizeof(int) );
 									memcpy( h, &hh, sizeof(int) );	
