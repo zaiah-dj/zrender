@@ -16,12 +16,26 @@ If dropping it into your own project, you can use:
 
 ## Usage
 
-By default, zrender uses a Mustache-like language for templating.   If this is fine, templating can be done via
+Templating for compiled languages can get incredibly complicated.
+Let's assume we have something like the following:
+
 <pre>
-uint8_t * dest = NULL;
-zrender_set_cmp( cmp );
-zrender_one_shot( dest, &destlen, data, src, srclen );
+typedef struct keyval { char * zuzah, * libname; } KeyVal;
+KeyVal k = { .zuzah = "Lucious", .libname = "zrender" }; 
+char * src = "Hello, {{ zuzah }}!  You are using {{ libname }}.";
 </pre>
+
+
+By default, zrender uses a Mustache-like language for templating.
+<pre>
+zRender * rz = zrender_init();
+uint8_t * dest = NULL;
+int destlen = 0;
+zrender_use_default( rz );
+zrender_one_shot( rz, dest, &destlen, data, src, srclen );
+</pre>
+
+zrender does not only support just one language.
 
 The templating process can be broken down into a few distinct steps.  
 

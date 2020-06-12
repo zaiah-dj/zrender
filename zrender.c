@@ -14,27 +14,9 @@ get the last block from whatever body
 
 */
 
-#define ZIPPY
-
 #ifdef DEBUG_H
 static int di = 0;
 #endif
-
-int INSIDE = 0;
-
-	
-static const int maps[] = {
-	[0  ] = RAW,
-	['#'] = LOOP_START,
-	['/'] = LOOP_END,
-	['.'] = COMPLEX_EXTRACT,
-	['$'] = EACH_KEY, 
-	['`'] = EXECUTE, //PAIR_EXTRACT
-	['!'] = BOOLEAN,
-	//[254] = SIMPLE_EXTRACT,
-	[255] = 0
-};
-
 
 
 int * zrender_copy_int ( int i ) {
@@ -55,19 +37,6 @@ zRender * zrender_init() {
 		return NULL;
 	}
 
-#if 0
-#ifdef ZIPPY
-	const int zrset_size = sizeof( struct zrSet ) * 127; 
-	if ( !( zr->mapset = malloc( zrset_size ) ) ) {
-		return NULL;
-	}
-
-	if ( !memset( zr->mapset, 0, zrset_size ) ) {
-		return NULL;
-	}
-
-#endif
-#endif
 	return zr;
 }
 
@@ -195,14 +164,13 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const uint8_t *src, int src
 				add_item( &rr, rp, struct map *, &rrlen );
 			}
 		}
-#if 1
 		else if ( src[ r.pos + r.size + 1 ] == '}' ) {
 			//Start extraction...
 			int alen=0, nlen = 0;	
 			struct map *rp = init_map();
 			uint8_t *p = zrender_trim( (uint8_t *)&src[ r.pos ], " ", r.size, &nlen );
 			rp->action = *p;  
-#if 1
+
 			if ( ( z = rz->mapset[ *p ] ) ) {
 FPRINTF( "z->extractor %d, %c = %p\n", (int)rp->action, rp->action, z );
 				//This should probably return some kind of error...
@@ -210,33 +178,7 @@ FPRINTF( "z->extractor %d, %c = %p\n", (int)rp->action, rp->action, z );
 				z->mapper( rp, &pr, &pplen, p, alen, rz->userdata ); 
 				add_item( &rr, rp, struct map *, &rrlen );
 			}
-#else
-			//Figure some things out...
-			if ( rp->action == LOOP_START ) {
-				map_loop_start( rp, &pr, &pplen, p, alen, t );
-			}
-			else if ( rp->action == LOOP_END ) {
-				map_loop_end( rp, &pr, &pplen, p, alen, t );
-			}
-			else if ( rp->action == COMPLEX_EXTRACT ) {
-				map_complex_extract( rp, &pr, &pplen, p, alen, t );
-			}
-			else if ( rp->action == EACH_KEY ) {
-				FPRINTF( "@EACH_KEY :: Nothing yet...\n" );
-			}
-			else if ( rp->action == EXECUTE ) {
-				FPRINTF( "@EXECUTE :: Nothing yet...\n" );
-			}
-			else if ( rp->action == BOOLEAN ) {
-				FPRINTF( "@BOOLEAN :: Nothing yet...\n" );
-			}
-			else {
-				map_simple_extract( rp, NULL, p, nlen, t );
-			}
-			add_item( &rr, rp, struct map *, &rrlen );
-#endif
 		}
-#endif
 	}
 
 #if 0
@@ -280,8 +222,7 @@ write( 2, block, blocklen );
 }
 
 
-#if 1
-//uint8_t *table_to_uint8t ( zTable *t, const uint8_t *src, int srclen, int *newlen ) {
+//Convert to unsigned character block
 uint8_t *table_to_uint8t ( zRender *rz, const uint8_t *src, int srclen, int *newlen ) {
 
 	//Define things
@@ -307,21 +248,6 @@ uint8_t *table_to_uint8t ( zRender *rz, const uint8_t *src, int srclen, int *new
 	}
 
 #if 0
-	//Convert T to a map
-	if ( !( map = table_to_map( t, src, srclen ) ) ) {
-		return NULL;
-	}
-
-#if 1
-	//See the map 
-	zrender_print_table( map );
-
-	//Do the map	
-	if ( !( block = map_to_uint8t( t, map, &blocklen ) ) ) {
-		return NULL;
-	}
-#endif
-
 	//Free the map
 	//destroy_render_table( map );
 	*newlen = blocklen;
@@ -329,7 +255,6 @@ uint8_t *table_to_uint8t ( zRender *rz, const uint8_t *src, int srclen, int *new
 
 	return block; 
 }
-#endif
 
 
 //Destroy the map...
