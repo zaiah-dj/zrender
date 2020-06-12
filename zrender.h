@@ -6,6 +6,18 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#define RPRINTF(a,b,blen) \
+	memset( rprintchar, 0, sizeof(rprintchar) ); \
+	memcpy( rprintchar, b, (blen >= sizeof(rprintchar)) ? sizeof(rprintchar) - 1 : blen ); \
+	FPRINTF( "%s > %s(...): '%s'\n", a, __func__, replace_chars( rprintchar, strlen(rprintchar) ) );
+
+#define EXTRACTOR(name) \
+	void name ( struct map ***row, uint8_t **dst, int *dlen, uint8_t *src, int len, struct ptr **ptr, void *t )
+
+#define MAPPER(name) \
+	void name ( struct map *row, struct map ***parent, int *plen, uint8_t *ptr, int len, void *t )
+
+
 enum {
 	RAW = 0,
 	LOOP_START = 30,
@@ -20,13 +32,6 @@ enum {
 	TERM = -2,
 	UNINIT = 127,
 };
-
-#if 0
-struct parent { 
-	uint8_t *text; 
-	int len, pos, childCount; 
-}; 
-#endif
 
 struct map { 
 	char action; 
@@ -65,9 +70,9 @@ typedef struct zRender {
 
 //static?
 void extract_table_value( zKeyval *, uint8_t **, int *, uint8_t *, int );
-struct map **table_to_map( void *, const uint8_t *, int );
-uint8_t *map_to_uint8t( void *, struct map **, int * );
-uint8_t *table_to_uint8t( zRender *, const uint8_t *, int, int * );
+//struct map **table_to_map( void *, const uint8_t *, int );
+//uint8_t *map_to_uint8t( void *, struct map **, int * );
+uint8_t *zrender_render ( zRender *, const uint8_t *, int, int * );
 
 //public?
 int zrender_check_balance ( zRender *, const uint8_t *, int );
@@ -79,6 +84,7 @@ zRender * zrender_init();
 void zrender_set_boundaries ( zRender *, const char *, const char *);
 void zrender_set_fetchdata( zRender *, void * );
 void zrender_set( zRender *, const char, Mapper, Extractor );
+void zrender_set_default_dialect( zRender *rz ) ;
 
 #ifdef DEBUG_H
 void zrender_print_table ( struct map ** );
