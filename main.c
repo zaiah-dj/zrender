@@ -932,17 +932,41 @@ struct Test tests[] =
 };
 
 
+#include "ztable-render.c"
+
+zRender *set_dialect( zTable *t ) {
+	//Create ... 
+	zRender *rz = zrender_init();
+	zrender_set_boundaries( rz, "{{", "}}" );
+	zrender_set_fetchdata( rz, t );
+	zrender_set( rz, '#', map_loop_start, extract_loop_start ); 
+	zrender_set( rz, '/', map_loop_end, extract_loop_end ); 
+	zrender_set( rz, 0, map_raw_extract, extract_raw ); 
+	zrender_set( rz, '.', map_complex_extract, extract_complex_extract ); 
+#if 0
+	//Simple extracts are anything BUT the other characters (but raw is also 1, so...)
+	zrender_set( rz, ' ', map_simple_extract, extract_simple_extract ); 
+	zrender_set( rz, '!', map_boolean, extract_boolean ); 
+	zrender_set( rz, '`', map_execute, extract_execute ); 
+#endif
+	return rz;
+}
+
+
 int main (int argc, char *argv[]) {
 	struct Test *test = tests;
-
+	
+	//....
 	while ( test->kvset ) {
 		fprintf( stderr, "%s %p\n", test->name, test->kvset );
 		zTable *t = convert_lkv( test->kvset );
-
 		int rlen = 0;
 		uint8_t *r = NULL;
+		zRender *rz = set_dialect( t );
+
+
 		//Finding the marks is good if there is enough memory to do it
-		if (( r = table_to_uint8t( t, (uint8_t *)test->src, strlen(test->src), &rlen ) ) == NULL ) {
+		if (( r = table_to_uint8t( rz, (uint8_t *)test->src, strlen(test->src), &rlen ) ) == NULL ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );
 		}
 
