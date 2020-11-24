@@ -21,6 +21,7 @@ void extract_table_value ( zKeyval *lt, uint8_t **ptr, int *len, uint8_t *t, int
 		*len = strlen( lt->value.v.vchar ); 
 		*ptr = (uint8_t *)lt->value.v.vchar;
 	}
+
 	else if ( lt->value.type == LITE_BLB ) {
 		*len = lt->value.v.vblob.size; 
 		*ptr = lt->value.v.vblob.blob;
@@ -234,6 +235,7 @@ EXTRACTOR(extract_raw) {
 	append_to_uint8t( dst, dlen, src, len );
 }
 
+
 EXTRACTOR(extract_loop_start) {
 	FPRINTF( "%-20s, %d\n", "xLOOP_START", (**row)->len );
 	//struct dep *d = (struct dep * )t;
@@ -242,6 +244,7 @@ EXTRACTOR(extract_loop_start) {
 	(*ptr)->current = 0;
 	(*ptr)->children = (**row)->children;
 }
+
 
 EXTRACTOR(extract_loop_end) {
 	FPRINTF( "%-20s\n", "xLOOP_END" );
@@ -254,27 +257,25 @@ EXTRACTOR(extract_loop_end) {
 	else {
 		*row = (*ptr)->index;
 	}
-
 	//FPRINTF( "%p ?= %p\n", (**row), (*ptr)->index );
 }
+
 
 EXTRACTOR(extract_simple_extract) {
 	FPRINTF( "%-20s\n", "xSIMPLE_EXTRACT" );
 	zTable *tt = (zTable *)t;
-	int hash = 0;
-	//rip me out
 	if ( (**row)->hashList ) {
-		//Get the type and length
-		if ( ( hash = **( (**row)->hashList) ) > -1 ) {
-			zKeyval *lt = lt_retkv( tt, hash );
-			uint8_t *ptr = NULL, nbuf[64] = {0};
+		int hash = **( (**row)->hashList ); 
+		if ( hash > -1 ) { 
+			zKeyval *lt = lt_retkv( t, hash );
+			uint8_t *iptr = NULL, nbuf[ 64 ] = { 0 };
 			int itemlen = 0;
-			extract_table_value( lt, &ptr, &itemlen, nbuf, sizeof(nbuf) );
-			append_to_uint8t( dst, dlen, ptr, len );
+			extract_table_value( lt, &iptr, &itemlen, nbuf, sizeof(nbuf) ); 
+			append_to_uint8t( dst, dlen, iptr, itemlen );
 		}
-		(**row)->hashList++;
 	}
 }
+
 
 EXTRACTOR(extract_complex_extract) {
 	FPRINTF( "%-20s\n", "xCOMPLEX EXTRACT" );
@@ -326,9 +327,9 @@ void zrender_set_default_dialect( zRender *rz ) {
 	zrender_set( rz, '/', map_loop_end, extract_loop_end ); 
 	zrender_set( rz, 0, map_raw_extract, extract_raw ); 
 	zrender_set( rz, '.', map_complex_extract, extract_complex_extract ); 
+	zrender_set( rz, 1, map_simple_extract, extract_simple_extract ); 
 #if 0
 	//Simple extracts are anything BUT the other characters (but raw is also 1, so...)
-	zrender_set( rz, ' ', map_simple_extract, extract_simple_extract ); 
 	zrender_set( rz, '!', map_boolean, extract_boolean ); 
 	zrender_set( rz, '`', map_execute, extract_execute ); 
 #endif
@@ -464,8 +465,10 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const uint8_t *src, int src
 			uint8_t *p = zrender_trim( (uint8_t *)&src[ r.pos ], " ", r.size, &nlen );
 			rp->action = *p;  
 
-			if ( ( z = rz->mapset[ *p ] ) ) {
+			//If no character handler exists, we fallback to 1
+			if ( ( z = rz->mapset[ *p ] ) || ( z = rz->mapset[1] ) ) {
 				//This should probably return some kind of error...
+				FPRINTF("RUNNING MAPPER on %c\n", rp->action ? ( ( rp->action == 1 ) ? 'S' : rp->action ) : 'R' );
 				p = zrender_trim( p, ". #/$`!\t", nlen, &alen );
 				z->mapper( rp, &pr, &pplen, p, alen, rz->userdata ); 
 				add_item( &rr, rp, struct map *, &rrlen );
@@ -473,9 +476,9 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const uint8_t *src, int src
 		}
 	}
 
+	//zrender_print_table( rr );getchar();
 #if 0
 	//Move through each of the rows 
-	zrender_print_table( rr );
 	//Destroy the parent list
 	free( pp );
 #endif
@@ -500,7 +503,9 @@ uint8_t *zrender_map_to_uint8t ( zRender *rz, struct map **xmap, int *newlen ) {
 	while ( *map ) {
 		struct map *rp = *map;
 		struct zrSet *z = NULL; 
-		if ( ( z = rz->mapset[ (int)rp->action ] ) ) {
+		//If no character handler exists, we fallback to 1
+		if ( ( z = rz->mapset[ (int)rp->action ] ) || ( z = rz->mapset[ 1 ] ) ) { 
+			FPRINTF("RUNNING EXTRACTOR on %c\n", rp->action ? ( ( rp->action == 1 ) ? 'S' : rp->action ) : 'R' );
 			z->extractor( &map, &block, &blocklen, rp->ptr, rp->len, &ptr, rz->userdata );
 		}
 		map++;

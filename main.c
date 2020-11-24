@@ -243,6 +243,7 @@ zKeyval DoublezTableNumeric[] = {
 		{ INT_KEY( 7008 )    , TEXT_VALUE( "The quick brown fox jumps over the lazy dog again." )  },
 		{ INT_KEY( 7009 )    , TEXT_VALUE( "The quick brown fox jumps over the lazy dog for the last time." )  },
 		{ TRM() },
+
 	{ LKV_LAST } 
 };
 
@@ -505,13 +506,14 @@ struct Test tests[] = {
 
 struct Test tests[] = 
 {
-	#if 0
 	//These should be pretty easy to read:
 	//.name   = Name of the test
 	//.desc   = A quick description of the test
 	//.renSrc = the input that the test will use for find and replace
 	//.renCmp = the constant to compare against to make sure that rendering worked
 	//.values = the zTable to use for values (these tests do not test any parsing)
+
+	#if 1
 	{
 		NozTable, "TABLE_NONE", "Template values with no tables.",
 		.src =
