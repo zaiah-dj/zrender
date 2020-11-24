@@ -25,7 +25,7 @@ char * src = "Hello, {{ zuzah }}!  You are using {{ libname }}.";
 </pre>
 
 
-In the `example/` folder, you'll see a file called simple.file with contents like so:
+In the `example/` folder, you'll see a file called `simple.file` with contents like so:
 <pre>
 zuzah="T'Pol"
 libname="Trellium D"
@@ -35,7 +35,7 @@ name="Shazam"
 
 Let's assume we have written a function 'read_file_to_table', which contains a parser capable of converting the contents of `simple.file` into a zTable.  
 <pre>
-zTable \*srcdata = malloc( sizeof( zTable ) );
+zTable * srcdata = malloc( sizeof( zTable ) );
 lt_init( zt, NULL, 2048 );
 read_file_to_table( zt, "simple.file" );
 </pre>
@@ -51,14 +51,12 @@ int destlen = 0;
 zRender * rz = zrender_init();
 zrender_set_default_dialect( rz );
 dest = zrender_render( rz, src, srclen, &destlen );
-</pre>
 
-And let's see those results
-<pre>
 //Dump the results
 write( 1, dest, destlen );
 </pre>
 
+Running this block of code will yield something like the following. (This example can be seen in `example.c`)
 <pre>
 Hello, "T'Pol"!  You are using "Trellium D".
 </pre>
