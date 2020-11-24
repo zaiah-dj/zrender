@@ -6,10 +6,14 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#define RPRINTF(a,b,blen) \
+#ifndef DEBUG_H
+ #define RPRINTF(a,b,blen)
+#else
+ #define RPRINTF(a,b,blen) \
 	memset( rprintchar, 0, sizeof(rprintchar) ); \
 	memcpy( rprintchar, b, (blen >= sizeof(rprintchar)) ? sizeof(rprintchar) - 1 : blen ); \
 	FPRINTF( "%s > %s(...): '%s'\n", a, __func__, replace_chars( rprintchar, strlen(rprintchar) ) );
+#endif
 
 #define EXTRACTOR(name) \
 	void name ( struct map ***row, uint8_t **dst, int *dlen, uint8_t *src, int len, struct ptr **ptr, void *t )
