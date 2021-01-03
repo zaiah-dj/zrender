@@ -161,7 +161,7 @@ zKeyval DoublezTableAlpha[] = {
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
 			{ TEXT_KEY( "desc" ), BLOB_VALUE( "There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors." ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				//Pay attention to this, I'd like to embed uint8_t data here (I think Lua can handle this)
+				//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
 				{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "The Real Silicon Valley" ) },
 				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
 				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
@@ -255,7 +255,7 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "San Francisco" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				//Pay attention to this, I'd like to embed uint8_t data here (I think Lua can handle this)
+				//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
 				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
 				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
 				{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
@@ -332,7 +332,7 @@ zKeyval MultiLevelzTableExtreme[] = {
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "San Francisco" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				//Pay attention to this, I'd like to embed uint8_t data here (I think Lua can handle this)
+				//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
 				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
 				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
 				{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
@@ -509,8 +509,8 @@ struct Test tests[] =
 	//These should be pretty easy to read:
 	//.name   = Name of the test
 	//.desc   = A quick description of the test
-	//.renSrc = the input that the test will use for find and replace
-	//.renCmp = the constant to compare against to make sure that rendering worked
+	//.src = the input that the test will use for find and replace
+	//.cmp = the constant to compare against to make sure that rendering worked
 	//.values = the zTable to use for values (these tests do not test any parsing)
 
 	#if 1
@@ -542,6 +542,91 @@ struct Test tests[] =
 	},
 	#endif
 
+	#if 1
+	{
+		NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source.",
+		.src =
+		 "<html>\n"
+		 "<head>\n"
+		 "</head>\n"
+		 "<body>\n"
+		 "	<h2>{{ ghi }</h2>\n"
+		 "	<p>\n"
+		 "		{{ abc }}\n"
+		 "	</p>	\n"
+		 "</body>\n"
+		 "</html>\n"
+	},
+	#endif
+
+	#if 1
+	{
+		NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top.",
+		.src =
+		 "<html>\n"
+		 "<head>\n"
+		 "<style>\n"
+			".container {\n"
+			"	top: 100px;\n"
+			"	margin: 100px;\n"
+			"}\n"
+			"\n"
+			"li {\n"
+			"	top: 100px;\n"
+			"	margin: 100px;\n"
+			"}\n"
+			"\n"
+			"@media only screen and ( max-width: 600px ) {\n"
+			"	body {{\n"
+			"		top: 100px;\n"
+			"		margin: 100px;\n"
+			"	}\n"
+			"}\n"
+		 "</style>\n"
+		 "</head>\n"
+		 "<body>\n"
+		 "	<h2>{{ ghi }}</h2>\n"
+		 "	<p>\n"
+		 "		{{ abc }}\n"
+		 "	</p>	\n"
+		 "</body>\n"
+		 "</html>\n"
+	},
+	#endif
+
+	#if 1
+	{
+		NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input.",
+		.src =
+		 "<html>\n"
+		 "<head>\n"
+		 "<style>\n"
+			".container {\n"
+			"	top: 100px;\n"
+			"	margin: 100px;\n"
+			"}\n"
+			"\n"
+			"li {\n"
+			"	top: 100px;\n"
+			"	margin: 100px;\n"
+			"}\n"
+			"\n"
+			"@media only screen and ( max-width: 600px ) {\n"
+			"	body {\n"
+			"		top: 100px;\n"
+			"		margin: 100px;\n"
+			"	}}\n"
+		 "</style>\n"
+		 "</head>\n"
+		 "<body>\n"
+		 "	<h2>{{ ghi }</h2>\n"
+		 "	<p>\n"
+		 "		{{ abc }}\n"
+		 "	</p>	\n"
+		 "</body>\n"
+		 "</html>\n"
+	},
+	#endif
 	#if 1
 	//one table
 	{
@@ -938,27 +1023,58 @@ int main (int argc, char *argv[]) {
 	
 	//....
 	while ( test->kvset ) {
-		fprintf( stderr, "%s %p\n", test->name, test->kvset );
+		fprintf( stderr, "\n%s %p\n", test->name, test->kvset );
 		zTable *t = convert_lkv( test->kvset );
 		int rlen = 0;
-		uint8_t *r = NULL;
+		unsigned char *r = NULL;
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, t );
 
+		//Enabling a dump of the original template kind of helps
+		write( 2, "===", 3 );
+		write( 2, test->src, strlen( test->src ) );
+		write( 2, "===", 3 );
 
-		//Finding the marks is good if there is enough memory to do it
-		if (( r = zrender_render( rz, (uint8_t *)test->src, strlen(test->src), &rlen ) ) == NULL ) {
+#if 0
+		//This performs a one-shot templating function 
+		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );
+			test++;
+			continue;
+		}
+#else
+		int bal = zrender_check_balance( rz, (unsigned char *)test->src, strlen(test->src) );
+		fprintf( stderr, "Template balanced? %d %c\n", bal, bal ? 'Y' : 'N' );
+		if ( !bal ) {
+			fprintf( stderr, "%s\n", rz->errmsg );
+			test++;
+			continue;
 		}
 
+		//start the mapping process
+		struct map **map = zrender_userdata_to_map( rz, 
+			(unsigned char *)test->src, strlen( test->src ) );
+
+		//Dump everything
+		zrender_print_table( map );
+
+		//Do the render
+		r = zrender_map_to_uint8t( rz, map, &rlen );
+		if ( !r ) {
+			fprintf( stderr, "%s\n", "Something went wrong at replacement." ); 
+			test++;
+			continue;
+		}
+#endif
+
 		//Dump the message
-		write( 1, r, rlen );
+		write( 2, r, rlen );
 
 		//Destroy everything...
 		free( r );
 		lt_free( t );
-		//zrender_free( rz );
+		zrender_free( rz );
 #if 0
 		//This is to automate render testing...	
 		int cmp = memcmp( r, test->cmp, rlen ); 

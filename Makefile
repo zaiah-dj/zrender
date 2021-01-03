@@ -1,8 +1,9 @@
 # zrender
 NAME = zrender
-CC = clang 
-CFLAGS = -Wall -Werror -std=c99 -Wno-unused -fsanitize=address \
-	-fsanitize-undefined-trap-on-error
+CC = clang
+CFLAGS = -Wall -Werror -std=c99 -Wno-unused \
+	-fsanitize=address -fsanitize-undefined-trap-on-error
+CFLAGS = -Wall -Werror -std=c99 -Wno-unused #-DDEBUG_H
 #CC = gcc
 #CFLAGS = -Wall -Werror -Wno-unused #-DDEBUG_H 
 
