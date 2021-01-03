@@ -94,6 +94,7 @@ void zrender_set_default_dialect( zRender *rz ) ;
 unsigned char *zrender_map_to_uint8t ( zRender *, struct map **, int * );
 struct map ** zrender_userdata_to_map ( zRender *, const unsigned char *, int );
 void zrender_free( zRender * );
+const char * zrender_strerror( zRender * );
 
 #ifdef DEBUG_H
 void zrender_print_table ( struct map ** );

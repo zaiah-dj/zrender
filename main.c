@@ -1036,7 +1036,7 @@ int main (int argc, char *argv[]) {
 		write( 2, test->src, strlen( test->src ) );
 		write( 2, "===", 3 );
 
-#if 0
+#if 1
 		//This performs a one-shot templating function 
 		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );

@@ -590,6 +590,11 @@ void zrender_free( zRender *z ) {
 }
 
 
+const char * zrender_strerror( zRender *z ) {
+	return z->errmsg;
+}
+
+
 #ifdef DEBUG_H
 //Purely for debugging, see what came out
 void zrender_print_table( struct map **map ) {
