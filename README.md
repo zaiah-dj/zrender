@@ -17,21 +17,37 @@ where main.c is the file containing your program.
 
 ## Usage
 
+### Whirlwind
+
 By default, zrender uses a Mustache-like language for templating.   
-So let's assume we have a string like the following:
+So assuming we have a string like the following:
 
 <pre>
 char * src = "Hello, {{ zuzah }}!  You are using {{ libname }}.";
 </pre>
 
-
-In the `example/` folder, you'll see a file called `simple.file` with contents like so:
+...and data input following the format:
 <pre>
 zuzah="T'Pol"
 libname="Trellium D"
 name="Shazam"
 </pre>
 
+We expect to see this in our program's output:
+
+<pre>
+Hello, "T'Pol"!  You are using "Trellium D".
+</pre>
+
+
+
+### Implementation
+
+Our data input in the section above can be found in the file `example/simple.file` within this repository.  
+An example parser can be written in whichever language you like, but for the purposes of this tutorial, one is included in example.c
+<pre>
+
+</pre> 
 
 Let's assume we have written a function 'read_file_to_table', which contains a parser capable of converting the contents of `simple.file` into a zTable.  
 <pre>
@@ -49,6 +65,7 @@ int destlen = 0;
 
 //Initialize the templating engine
 zRender * rz = zrender_init();
+zrender_set_fetchdata( rz, srcdata );
 zrender_set_default_dialect( rz );
 dest = zrender_render( rz, src, srclen, &destlen );
 
