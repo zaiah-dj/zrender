@@ -542,7 +542,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 1
+	#if 0
 	{
 		NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source.",
 		.src =
@@ -559,7 +559,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 1
+	#if 0
 	{
 		NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top.",
 		.src =
@@ -594,7 +594,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 1
+	#if 0
 	{
 		NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input.",
 		.src =
@@ -627,7 +627,27 @@ struct Test tests[] =
 		 "</html>\n"
 	},
 	#endif
-	#if 1
+
+	#if 0
+	{
+		SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure",
+		.src =
+		 "<html>\n"
+		 "<head>\n"
+		 "</head>\n"
+		 "<body>\n"
+		 "{{ artillery }}"
+		 "	<h2>{{ .rec }}</h2>\n"
+		 "	<p>\n"
+		 "		{{ .val }}\n"
+		 "	</p>\n"
+		 "{{/ artillery }}"
+		 "</body>\n"
+		 "</html>\n"
+	},
+	#endif
+
+	#if 0
 	//one table
 	{
 		SinglezTable, "TABLE_SINGLE", "one level table",
@@ -1036,7 +1056,7 @@ int main (int argc, char *argv[]) {
 		write( 2, test->src, strlen( test->src ) );
 		write( 2, "===", 3 );
 
-#if 1
+#if 0
 		//This performs a one-shot templating function 
 		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );

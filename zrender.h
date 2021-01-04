@@ -1,18 +1,23 @@
-#include "vendor/zwalker.h"
-#include "vendor/zhasher.h"
-#include "vendor/util.h"
-
+#include "zwalker.h"
+#include "zhasher.h"
 
 #ifndef RENDER_H
 #define RENDER_H
 
+#define zrender_add_item(LIST,ELEMENT,SIZE,LEN) \
+ add_item_to_list( (void ***)LIST, ELEMENT, sizeof( SIZE ), LEN )
+
 #ifndef DEBUG_H
  #define RPRINTF(a,b,blen)
+ #define ZRENDER_PRINTF(...)
 #else
+ #define ZRENDER_PRINTF(...) \
+	fprintf( stderr, "DEBUG: %s[%d]: ", __FILE__, __LINE__ ) && \
+	fprintf( stderr, __VA_ARGS__ )
  #define RPRINTF(a,b,blen) \
 	memset( rprintchar, 0, sizeof(rprintchar) ); \
 	memcpy( rprintchar, b, (blen >= sizeof(rprintchar)) ? sizeof(rprintchar) - 1 : blen ); \
-	FPRINTF( "%s > %s(...): '%s'\n", a, __func__, replace_chars( rprintchar, strlen(rprintchar) ) );
+	ZRENDER_PRINTF( "%s > %s(...): '%s'\n", a, __func__, replace_chars( rprintchar, strlen(rprintchar) ) );
 #endif
 
 #define EXTRACTOR(name) \
@@ -20,7 +25,6 @@
 
 #define MAPPER(name) \
 	void name ( struct map *row, struct map ***parent, int *plen, unsigned char *ptr, int len, void *t )
-
 
 enum {
 	RAW = 0,
@@ -74,32 +78,39 @@ typedef struct zRender {
 	struct zrSet *mapset[128]; //takes up more space
 } zRender;
 
-//static?
 void extract_table_value( zKeyval *, uint8_t **, int *, uint8_t *, int );
-//struct map **table_to_map( void *, const uint8_t *, int );
-//uint8_t *map_to_uint8t( void *, struct map **, int * );
+
 uint8_t *zrender_render ( zRender *, const uint8_t *, int, int * );
 
-//public?
 int zrender_check_balance ( zRender *, const uint8_t *, int );
+
 void zrender_free_table( struct map **map );
+
 int * zrender_copy_int ( int i ) ;
+
 uint8_t *zrender_trim ( const uint8_t *msg, const char *trim, int len, int *nlen ) ;
 
 zRender * zrender_init();
+
 void zrender_set_boundaries ( zRender *, const char *, const char *);
+
 void zrender_set_fetchdata( zRender *, void * );
+
 void zrender_set( zRender *, const char, Mapper, Extractor );
+
 void zrender_set_default_dialect( zRender *rz ) ;
+
 unsigned char *zrender_map_to_uint8t ( zRender *, struct map **, int * );
+
 struct map ** zrender_userdata_to_map ( zRender *, const unsigned char *, int );
+
 void zrender_free( zRender * );
+
 const char * zrender_strerror( zRender * );
 
 #ifdef DEBUG_H
-void zrender_print_table ( struct map ** );
-
-#define DUMPACTION( NUM ) \
+ void zrender_print_table ( struct map ** );
+ #define DUMPACTION( NUM ) \
 	( NUM == LOOP_START ) ? "LOOP_START" : \
 	( NUM == LOOP_END ) ? "LOOP_END" : \
 	( NUM == COMPLEX_EXTRACT ) ? "COMPLEX_EXTRACT" : \
@@ -109,11 +120,7 @@ void zrender_print_table ( struct map ** );
 	( NUM == BOOLEAN ) ? "BOOLEAN" : \
 	( NUM == RAW ) ? "RAW" : "UNKNOWN" 
 #else
-#define zrender_print_table(a)
+ #define zrender_print_table(a)
 #endif
 
 #endif
-
-
-
-
