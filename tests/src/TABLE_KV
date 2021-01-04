@@ -1,0 +1,12 @@
+<html>
+<head>
+</head>
+<body>
+{{# artillery }}
+	<h2>{{$ key }}</h2>
+	<p>
+		{{$ val }}
+	</p>	
+{{/ artillery }}
+</body>
+</html>

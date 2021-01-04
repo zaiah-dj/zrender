@@ -1,0 +1,63 @@
+<html>
+<head>
+</head>
+<body>
+
+	<h2>San Francisco</h2>
+	<p>
+    San Francisco, CA is a city full of 870887 people.
+	</p>
+	<p>
+  	There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors.
+	</p>
+	<table>
+	<thead>
+		<th>Skyline</th>
+		<th>Population</th>
+	</thead>
+	<tbody>
+    <tr>
+			<td>Population: 870887</td>
+			<td>Claim to Fame: The Real Silicon Valley</td>
+    </tr>
+	</tbody>
+	</table>
+
+	<h2>New York</h2>
+	<p>
+    New York is a city full of 8750000 people.
+	</p>
+	<p>
+    New York, NY is one of the most well-known destinations on earth and home to over 8 million residents.
+	</p>
+	<table>
+	<thead>
+		<th>Skyline</th>
+		<th>Population</th>
+	</thead>
+	<tbody>
+    <tr>
+			<td>Population: 19750000</td>
+			<td>Claim to Fame: The Greatest City on Earth</td>
+    </tr>
+	</tbody>
+	</table>
+
+	<h2>Raleigh</h2>
+	<p>
+    Raleigh, NC is a city full of 350001 people.
+	</p>
+	<table>
+	<thead>
+		<th>Skyline</th>
+		<th>Population</th>
+	</thead>
+	<tbody>
+    <tr>
+			<td>350001</td>
+			<td>Silicon Valley of the South</td>
+    </tr>
+	</tbody>
+	</table>
+</body>
+</html>

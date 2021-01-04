@@ -1,0 +1,29 @@
+<html>
+<head>
+</head>
+<body>
+{{# cities }}
+	<h2>{{ .city }}</h2>
+	<p>
+		{{ .city }}, {{ .parent_state }} is a city containing {{ .metadata.population }} people.
+	</p>
+	<p>
+		{{ .desc }}
+	</p>
+	<table>
+	<thead>
+		<th>Skyline</th>
+		<th>Population</th>
+	</thead>
+	<tbody>
+	{{# .metadata }}
+		<tr>
+			<td>Population: {{ .population }}</td>
+			<td>Claim to Fame: {{ cities.metadata.claim_to_fame }}</td>
+		</tr>
+	{{/ .metadata }}
+	</tbody>
+	</table>
+{{/ cities }}
+</body>
+</html>

@@ -435,35 +435,53 @@ unsigned char *zrender_trim ( const unsigned char *msg, const char *trim, int le
 //Check that the data is balanced.
 //Go ahead and populate the map structure here
 int zrender_check_syntax ( zRender *rz, const unsigned char *src, int srclen ) {
-	zWalker r;
-	memset( &r, 0, sizeof( zWalker ) );
+	zWalker r = {0};
 	unsigned char check[] = { rz->zStart[0], rz->zEnd[0], '\n' };
 	struct pos { int a, b, l, lp; } set[128] = {0}; 
-int ls=0, le=0;
+	int ls=0, le=0;
 	int sl = 0, el = 0, nl = 0, mark = 0;
 
 	//just check that the list is balanced
-	while ( memwalk( &r, src, check, srclen, 3 ) ) {
+	while ( memwalk( &r, src, check, srclen, sizeof(check) ) ) {
 		if ( r.chr == '\n' ) 
 			nl++, set[ sl ].lp = r.pos;
-		else if ( r.chr == check[0] && *r.ptr == check[0] ) {
-			mark = 1, set[ sl ].a = r.pos, set[ sl ].l = nl, sl++;
-		}
-		else if ( mark == 1 && r.chr == check[1] && *r.ptr == check[1] ) {
+		else if ( r.chr == check[0] && *r.ptr == check[0] )
+			set[ sl ].a = r.pos, set[ sl ].l = nl, mark = 1, sl++;
+		else if ( r.chr == check[1] && *r.ptr == check[1] ) {
 			//start list must be marked first, or don't go
-			mark = 0, set[ sl ].b = r.pos, set[ sl ].l = nl, el++;
-#if 0
+			mark = 0, set[ el ].b = r.pos;
+			#if 1
+			//Do another check for the end sequence before a start sequence
+			if ( el > sl ) {
+				//rz->error = ZRENDER_SYNTAX_LOOP;
+				//TODO: Add exact positioning later
+				const char fmt[] = "Loop end sequence detected at line %d, but no loop start found\n";
+				snprintf( rz->errmsg, 1024, fmt, nl ); 
+				return 0;	
+			}
+			#endif
 			unsigned char * ts = zrender_trim( r.src, " ", r.size - 1, NULL ); 
-			( *ts == '#' ) ? ls ++ : ( *ts == '/' ) ? le ++ : 0;
-#endif
-		}
-		else {
-
+			if ( *ts == '#' )
+				ls++;
+			else if ( *ts == '/' ) {
+				if ( ++le > ls ) {
+					//rz->error = ZRENDER_SYNTAX_LOOP;
+					//TODO: Add exact positioning later
+					const char fmt[] = "Loop end detected at line %d, but no loop start found\n";
+					snprintf( rz->errmsg, 1024, fmt, nl ); 
+					return 0;	
+				}
+			}
+			el++;
 		}
 	}
 
-#if 0
 	if ( sl != el ) {
+#if 0
+		const char fmt[] = "Sequence terminators are bad\n";
+		snprintf( rz->errmsg, 1024, fmt );
+		return 0;
+#endif
 		//rz->error = ZRENDER_SYNTAX_TERMINATOR;
 		for ( int i = 0; i <= sl; i++ ) {
 			if ( set[i].b == 0 ) {
@@ -473,9 +491,8 @@ int ls=0, le=0;
 			}	
 		}
 	}
-#endif
 
-#if 0
+#if 1
 	if ( ls != le ) {
 		//rz->error = ZRENDER_SYNTAX_LOOP;
 		const char fmt[] = "Loop start and end are wrong\n";

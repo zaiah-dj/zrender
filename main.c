@@ -1,5 +1,5 @@
 #include "zrender.h"
-
+#include <fcntl.h>
 #define SPACE_TEST "sister_cities"
 
 /*Max key searches*/
@@ -513,13 +513,11 @@ struct Test tests[] =
 	//.cmp = the constant to compare against to make sure that rendering worked
 	//.values = the zTable to use for values (these tests do not test any parsing)
 
-	#if 0
+	#if 1
 	{
 		NozTable, "TABLE_NONE", "Template values with no tables.",
 		.src =
 		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
 		 "<body>\n"
 		 "	<h2>{{ ghi }}</h2>\n"
 		 "	<p>\n"
@@ -530,8 +528,6 @@ struct Test tests[] =
 		,
 		.cmp = 
 		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
 		 "<body>\n"
 		 "	<h2>245</h2>\n"
 		 "	<p>\n"
@@ -542,13 +538,11 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	{
 		NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source.",
 		.src =
 		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
 		 "<body>\n"
 		 "	<h2>{{ ghi }</h2>\n"
 		 "	<p>\n"
@@ -594,7 +588,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	{
 		NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input.",
 		.src =
@@ -628,7 +622,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	{
 		SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure",
 		.src =
@@ -636,8 +630,7 @@ struct Test tests[] =
 		 "<head>\n"
 		 "</head>\n"
 		 "<body>\n"
-		 "{{ artillery }}"
-		 "	<h2>{{ .rec }}</h2>\n"
+		 "{{ artillery }} <h2>{{ .rec }}</h2>\n"
 		 "	<p>\n"
 		 "		{{ .val }}\n"
 		 "	</p>\n"
@@ -647,7 +640,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	//one table
 	{
 		SinglezTable, "TABLE_SINGLE", "one level table",
@@ -691,7 +684,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	{
 		DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test",
 		//Notice the cities.metadata loop block.  Teset for short and long keys...
@@ -792,7 +785,7 @@ struct Test tests[] =
 		 "</html>\n"
 	},
 #endif
-	#if 0
+	#if 1
 	{
 		DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test",
 		//Notice the cities.metadata loop block.  Teset for short and long keys...
@@ -893,7 +886,7 @@ struct Test tests[] =
 		 "</html>\n"
 	},
 	{
-		DoublezTableNumeric, "two level table", "two level table | key value test",
+		DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test",
 		.src =
 		 "<html>\n"
 		 "<head>\n"
@@ -942,11 +935,11 @@ struct Test tests[] =
 	},
 #endif
 
-#if 0
+#if 1
 	//If you can't solve it, don't beat yourself up over it.
 	//Either try something else or approach it a different way...
 	{
-		DoublezTableNumeric, "two level table", "two level table | key value test",
+		DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test",
 		.src =
 		 "<html>\n"
 		 "<head>\n"
@@ -995,7 +988,7 @@ struct Test tests[] =
 	},
 	//multi-level tables
 	{
-		MultiLevelzTable, "key and value", "key and value",
+		MultiLevelzTable, "TABLE_KV", "key and value",
 		.src =
 		 "<html>\n"
 		 "<head>\n"
@@ -1051,11 +1044,21 @@ int main (int argc, char *argv[]) {
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, t );
 
+
+if ( test->cmp ) {
+char bb[2048] = {0};
+sprintf( bb, "%s/%s", "tests/cmp", test->name );
+int fd = open( bb, O_CREAT | O_WRONLY ); 
+write( fd, test->cmp, strlen( test->cmp ) );
+close(fd);
+}
+
 		//Enabling a dump of the original template kind of helps
 		write( 2, "===", 3 );
 		write( 2, test->src, strlen( test->src ) );
 		write( 2, "===", 3 );
 
+#if 0
 #if 0
 		//This performs a one-shot templating function 
 		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
@@ -1087,8 +1090,8 @@ int main (int argc, char *argv[]) {
 
 		//Dump the message
 		write( 2, r, rlen );
-
-#if 0
+#endif
+#if 1
 destroy_buf:
 destroy_zr:
 destroy:
