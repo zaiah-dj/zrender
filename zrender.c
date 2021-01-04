@@ -1,7 +1,6 @@
 #include "zrender.h"
 
 #ifdef DEBUG_H
-static int di = 0;
 static char rprintchar[127] = {0};
 static char * replace_chars ( char *src, int srclen ) {
 	char *srcsrc = src;
@@ -12,6 +11,7 @@ static char * replace_chars ( char *src, int srclen ) {
 	return src;
 }
 #endif
+
 
 static unsigned char *append_to_uint8t ( uint8_t **dest, int *len, uint8_t *src, int srclen ) {
 	if ( !( *dest = realloc( *dest, (*len) + srclen ) ) ) {	
@@ -344,14 +344,9 @@ int * zrender_copy_int ( int i ) {
 //Initialize the object
 zRender * zrender_init() {
 	zRender *zr = malloc( sizeof( zRender ) );
-	if ( !zr ) {
+	if ( !zr || !memset( zr, 0, sizeof( zRender ) ) ) {
 		return NULL;
 	}
-
-	if ( !memset( zr, 0, sizeof( zRender ) ) ) {
-		return NULL;
-	}
-
 	return zr;
 }
 
@@ -379,7 +374,6 @@ struct map * init_map ( int action ) {
 		//Free and destroy things
 		return NULL;
 	}
-
 	memset( rp, 0, sizeof( struct map ) );
 	rp->action = action; 
 	rp->ptr = NULL; 
@@ -439,7 +433,8 @@ unsigned char *zrender_trim ( const unsigned char *msg, const char *trim, int le
 
 
 //Check that the data is balanced.
-int zrender_check_balance ( zRender *rz, const unsigned char *src, int srclen ) {
+//Go ahead and populate the map structure here
+int zrender_check_syntax ( zRender *rz, const unsigned char *src, int srclen ) {
 	zWalker r;
 	memset( &r, 0, sizeof( zWalker ) );
 	unsigned char check[] = { rz->zStart[0], rz->zEnd[0], '\n' };
@@ -462,8 +457,12 @@ int ls=0, le=0;
 			( *ts == '#' ) ? ls ++ : ( *ts == '/' ) ? le ++ : 0;
 #endif
 		}
+		else {
+
+		}
 	}
 
+#if 0
 	if ( sl != el ) {
 		//rz->error = ZRENDER_SYNTAX_TERMINATOR;
 		for ( int i = 0; i <= sl; i++ ) {
@@ -474,6 +473,7 @@ int ls=0, le=0;
 			}	
 		}
 	}
+#endif
 
 #if 0
 	if ( ls != le ) {
@@ -493,79 +493,56 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, i
 	struct map **rr = NULL, **pr = NULL;
 	int rrlen = 0, pplen = 0;
 	zWalker r = { 0 };
-
-	//The check map is now dynamically generated
 	unsigned char check[] = { rz->zStart[0], rz->zEnd[0] };
-	int checklen = 2;//sizeof(check);
 
 	//Allocating a list of characters to elements is easiest.
-	while ( memwalk( &r, (unsigned char *)src, check, srclen, checklen ) ) {
+	while ( memwalk( &r, (unsigned char *)src, check, srclen, sizeof(check)) ) {
 		struct zrSet *z = NULL; 
-		if ( r.chr == '{' && *r.ptr == '{' ) {
+		if ( r.chr == check[0] && *r.ptr == check[0] ) {
 			struct map *rp = init_map( 0 );
 			if ( ( z = rz->mapset[ 0 ] ) ) {
 				z->mapper( rp, NULL, NULL, r.src, r.size - 1, rz->userdata );
 				zrender_add_item( &rr, rp, struct map *, &rrlen );
 			}
 		}
-		else if ( r.chr == '}' && *r.ptr == '}' )	 {
-			//Start extraction...
-			int alen=0, nlen = 0;	
+		else if ( r.chr == check[1] && *r.ptr == check[1] )	 {
+			int alen = 0, nlen = 0, mark = 0;	
 			unsigned char *p = zrender_trim( r.src, " ", r.size - 1, &nlen );
 			struct map *rp = init_map( *p );
 
 			//If no character handler exists, we fallback to 1
 			if ( ( z = rz->mapset[ *p ] ) || ( z = rz->mapset[1] ) ) {
-				//This should probably return some kind of error...
-				//ZRENDER_PRINTF("RUNNING MAPPER on %c\n", rp->action ? ( ( rp->action == 1 ) ? 'S' : rp->action ) : 'R' );
 				p = zrender_trim( p, ". #/$`!\t", nlen, &alen );
 				z->mapper( rp, &pr, &pplen, p, alen, rz->userdata ); 
 				zrender_add_item( &rr, rp, struct map *, &rrlen );
 			}
 		}
-		else if ( *r.src != '{' && *r.src != '}' ) {
-		#if 0	
-			fprintf( stderr, "else match\n" );
-			write( 2, r.src, srclen - r.pos );
-			getchar();
-		#endif
+		else if ( *r.src != '}' && *r.src != '{' ) {  
 			struct map *rp = init_map( 0 );
 			if ( ( z = rz->mapset[ 0 ] ) ) {
-				z->mapper( rp, NULL, NULL, r.src, srclen - r.pos, rz->userdata );
+				int size = ( *r.ptr == '{' ) ? r.size - 1 : r.size; 
+				z->mapper( rp, NULL, NULL, r.src, size, rz->userdata );
 				zrender_add_item( &rr, rp, struct map *, &rrlen );
 			}
 		}
 	}
-
-
-#if 0
-	//copy at the end all sloppy like...
-	struct zrSet *z = NULL; 
-	struct map *rp = init_map( 0 );
-	if ( ( z = rz->mapset[ 0 ] ) ) {
-		z->mapper( rp, NULL, NULL, (unsigned char *)&src[ r.pos ], srclen - r.pos, rz->userdata );
-		zrender_add_item( &rr, rp, struct map *, &rrlen );
-	}
-#endif
 
 #if 0
 	//Move through each of the rows 
 	//Destroy the parent list
 	free( pp );
 #endif
-	return rr;
+	return ( rz->map = rr );
 }
 
 
-
 //Merge the values referenced in the map array into an unsigned character block
-unsigned char *zrender_map_to_uint8t ( zRender *rz, struct map **xmap, int *newlen ) {
-	//...
+unsigned char *zrender_map_to_uint8t ( zRender *rz, int *newlen ) {
 	unsigned char *block = NULL;
 	int blocklen = 0;
 	struct ptr mptr[10] = { { 0, 0, 0 } };
 	struct ptr *ptr = mptr;
-	struct map **map = xmap;
+	struct map **map = rz->map;
 
 	while ( map && *map ) {
 		struct map *rp = *map;
@@ -586,26 +563,23 @@ unsigned char *zrender_map_to_uint8t ( zRender *rz, struct map **xmap, int *newl
 
 //Do all the steps to make templating quick and easy.
 unsigned char *zrender_render( zRender *rz, const unsigned char *src, int srclen, int *newlen ) {
-
-	//Define things
-	struct map **map = NULL;
 	unsigned char *buf = NULL;
 	int buflen = 0;
 
 	//TODO: Mark the place where the thing is undone
-	if ( !zrender_check_balance( rz, src, srclen ) ) {
+	if ( !zrender_check_syntax ( rz, src, srclen ) ) {
 		ZRENDER_PRINTF( "Syntax at supplied template is wrong..." );
 		return NULL;
 	}
 
 	//TODO: Rename table_to_map to srcdata_to_map
 	//TODO: Be sure to catch errors when mapping (like things aren't there or something)
-	if ( !( map = zrender_userdata_to_map( rz, src, srclen ) ) ) {
+	if ( !zrender_userdata_to_map( rz, src, srclen ) ) {
 		return NULL;
 	}
 
 	//TODO: Same to catch errors here...
-	if ( !( buf = zrender_map_to_uint8t( rz, map, &buflen ) ) ) {
+	if ( !( buf = zrender_map_to_uint8t( rz, &buflen ) ) ) {
 		return NULL;
 	}
 
@@ -615,19 +589,22 @@ unsigned char *zrender_render( zRender *rz, const unsigned char *src, int srclen
 
 
 //Destroy the zRender structure
-void zrender_free_table( struct map **map ) {
-	struct map **top = map;
+void zrender_free_map( struct map **map ) {
+	struct map **tt = map;
+	int di = 0;
 
-	while ( *map ) {
-		struct map *item = *map;
+	while ( tt && *tt ) {
+		struct map *item = *tt;
 
 		//Dump the unchanging elements out...
 		ZRENDER_PRINTF( "[%3d] => action: %-16s", di++, DUMPACTION( item->action ) );
 
-		if ( item->action == RAW ) { 
+	#if 0
+		if ( item->action == RAW )
 			ZRENDER_PRINTF( "Nothing to free...\n" );
-		}
-		else if ( item->action == EXECUTE ) {
+		else 
+	#endif
+		if ( item->action == EXECUTE ) {
 			ZRENDER_PRINTF( "Freeing pointer to exec content..." );
 			free( item->ptr );
 		}
@@ -635,7 +612,7 @@ void zrender_free_table( struct map **map ) {
 			ZRENDER_PRINTF( "Freeing int lists..." );
 			int **ii = item->hashList;
 			while ( ii && *ii ) {
-				fprintf( stderr, "item->intlist: %p\n", *ii );	
+				ZRENDER_PRINTF( "item->intlist: %p\n", *ii );	
 				free( *ii ); 
 				ii++;
 			}
@@ -643,15 +620,26 @@ void zrender_free_table( struct map **map ) {
 			ZRENDER_PRINTF( "\n" );
 		}
 		free( item );
-		map++;
+		tt++;
 	}
 
-	free( top );
+	free( map );
 }
 
 
-void zrender_free( zRender *z ) {
+void zrender_free_mapset ( struct zrSet **mapset, int size ) {
+	for ( int i=0; i < size; i++ ) {
+		if ( mapset[ i ] ) free( mapset[ i ] );
+	}
+}
 
+
+void zrender_free( zRender *rz ) {
+	zrender_free_map( rz->map );
+	zrender_free_mapset( rz->mapset, sizeof(rz->mapset)/sizeof(struct zrSet *) );
+	free( (void *)rz->zStart );
+	free( (void *)rz->zEnd );
+	free( rz );
 }
 
 
@@ -663,6 +651,7 @@ const char * zrender_strerror( zRender *z ) {
 #ifdef DEBUG_H
 //Purely for debugging, see what came out
 void zrender_print_table( struct map **map ) {
+	int di = 0;
 	while ( *map ) {
 		struct map *item = *map;
 

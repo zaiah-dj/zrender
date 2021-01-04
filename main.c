@@ -513,7 +513,7 @@ struct Test tests[] =
 	//.cmp = the constant to compare against to make sure that rendering worked
 	//.values = the zTable to use for values (these tests do not test any parsing)
 
-	#if 1
+	#if 0
 	{
 		NozTable, "TABLE_NONE", "Template values with no tables.",
 		.src =
@@ -559,7 +559,7 @@ struct Test tests[] =
 	},
 	#endif
 
-	#if 0
+	#if 1
 	{
 		NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top.",
 		.src =
@@ -577,7 +577,7 @@ struct Test tests[] =
 			"}\n"
 			"\n"
 			"@media only screen and ( max-width: 600px ) {\n"
-			"	body {{\n"
+			"	body {\n"
 			"		top: 100px;\n"
 			"		margin: 100px;\n"
 			"	}\n"
@@ -590,7 +590,7 @@ struct Test tests[] =
 		 "		{{ abc }}\n"
 		 "	</p>	\n"
 		 "</body>\n"
-		 "</html>\n"
+		 "</html>{{ asdfsadf }}\n"
 	},
 	#endif
 
@@ -1040,7 +1040,7 @@ struct Test tests[] =
 
 int main (int argc, char *argv[]) {
 	struct Test *test = tests;
-	
+
 	//....
 	while ( test->kvset ) {
 		fprintf( stderr, "\n%s %p\n", test->name, test->kvset );
@@ -1060,45 +1060,52 @@ int main (int argc, char *argv[]) {
 		//This performs a one-shot templating function 
 		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );
-			test++;
-			continue;
+			goto destroy_zr;
 		}
 #else
-		int bal = zrender_check_balance( rz, (unsigned char *)test->src, strlen(test->src) );
+		int bal = zrender_check_syntax( rz, (unsigned char *)test->src, strlen(test->src) );
 		fprintf( stderr, "Template balanced? %d %c\n", bal, bal ? 'Y' : 'N' );
 		if ( !bal ) {
 			fprintf( stderr, "%s\n", rz->errmsg );
-			test++;
-			continue;
+			goto destroy_zr;
 		}
 
 		//start the mapping process
-		struct map **map = zrender_userdata_to_map( rz, 
-			(unsigned char *)test->src, strlen( test->src ) );
+		zrender_userdata_to_map( rz, (unsigned char *)test->src, strlen( test->src ) );
 
 		//Dump everything
-		zrender_print_table( map );
+		zrender_print_table( rz->map );
 
+	#if 1
 		//Do the render
-		r = zrender_map_to_uint8t( rz, map, &rlen );
-		if ( !r ) {
+		if ( !( r = zrender_map_to_uint8t( rz, &rlen ) ) ) {
 			fprintf( stderr, "%s\n", "Something went wrong at replacement." ); 
-			test++;
-			continue;
+			goto destroy_zr;
 		}
+	#endif
 #endif
 
 		//Dump the message
 		write( 2, r, rlen );
 
+#if 0
+destroy_buf:
+destroy_zr:
+destroy:
+#else
 		//Destroy everything...
+destroy_buf:
 		free( r );
-		lt_free( t );
+destroy_zr:
 		zrender_free( rz );
+destroy:
+		lt_free( t );
+		free( t );
 #if 0
 		//This is to automate render testing...	
 		int cmp = memcmp( r, test->cmp, rlen ); 
 		fprintf( stderr, "%s\n", cmp ? "FAILED" : "SUCCESS" );
+#endif
 #endif
 		test++;
 	}

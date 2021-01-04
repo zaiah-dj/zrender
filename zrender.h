@@ -73,18 +73,19 @@ typedef struct zRender {
 	const char *zStart, *zEnd;
 	void *userdata;
 	int zrlen;
+	struct map **map;	
+	struct zrSet *mapset[128]; //takes up more space
 	int error;
 	char errmsg[1024];
-	struct zrSet *mapset[128]; //takes up more space
 } zRender;
 
 void extract_table_value( zKeyval *, uint8_t **, int *, uint8_t *, int );
 
 uint8_t *zrender_render ( zRender *, const uint8_t *, int, int * );
 
-int zrender_check_balance ( zRender *, const uint8_t *, int );
+int zrender_check_syntax ( zRender *, const uint8_t *, int );
 
-void zrender_free_table( struct map **map );
+void zrender_free_map( struct map **map );
 
 int * zrender_copy_int ( int i ) ;
 
@@ -100,7 +101,7 @@ void zrender_set( zRender *, const char, Mapper, Extractor );
 
 void zrender_set_default_dialect( zRender *rz ) ;
 
-unsigned char *zrender_map_to_uint8t ( zRender *, struct map **, int * );
+unsigned char *zrender_map_to_uint8t ( zRender *, int * );
 
 struct map ** zrender_userdata_to_map ( zRender *, const unsigned char *, int );
 

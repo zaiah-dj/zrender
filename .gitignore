@@ -1,4 +1,5 @@
 render.[ch]
 render-test.c
 zrender-test
+example
 TODO
