@@ -1,5 +1,7 @@
 #include "zrender.h"
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 #define SPACE_TEST "sister_cities"
 
 /*Max key searches*/
@@ -487,6 +489,29 @@ zTable *convert_lkv ( zKeyval *kv ) {
 #define TEST(k,d) \
 	{ #k, k }
 
+
+//read file and path
+char *read_file ( const char *name, const char *path  ) {
+	char *buf = NULL, bb[2048] = {0};
+	struct stat sb = {0};
+	int fd = 0;
+	sprintf( bb, "%s/%s", path, name );
+
+	if ( stat( bb, &sb ) == -1 ) goto die;	
+	if ( !( buf = malloc( sb.st_size + 1 ) ) || !memset( buf, 0, sb.st_size + 1 ) ) goto die;	
+	if ( ( fd = open( bb, O_RDONLY ) ) == -1 ) goto die;	
+	if ( ( read( fd, buf, sb.st_size ) ) == -1 ) goto die; 
+
+	close( fd );
+	return buf;
+
+die:
+	fprintf( stderr, "attempt to load: %s, e: %s\n", bb, strerror( errno ) );
+	exit( 0 );
+	return NULL;
+}
+
+
 struct Test {
 	zKeyval *kvset;
 	const char *name, *desc;
@@ -513,520 +538,24 @@ struct Test tests[] =
 	//.cmp = the constant to compare against to make sure that rendering worked
 	//.values = the zTable to use for values (these tests do not test any parsing)
 
-	#if 1
-	{
-		NozTable, "TABLE_NONE", "Template values with no tables.",
-		.src =
-		 "<html>\n"
-		 "<body>\n"
-		 "	<h2>{{ ghi }}</h2>\n"
-		 "	<p>\n"
-		 "		{{ abc }}\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<body>\n"
-		 "	<h2>245</h2>\n"
-		 "	<p>\n"
-		 "		Large angry deer are following me.\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	#endif
-
-	#if 1
-	{
-		NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source.",
-		.src =
-		 "<html>\n"
-		 "<body>\n"
-		 "	<h2>{{ ghi }</h2>\n"
-		 "	<p>\n"
-		 "		{{ abc }}\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	#endif
-
-	#if 1
-	{
-		NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top.",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "<style>\n"
-			".container {\n"
-			"	top: 100px;\n"
-			"	margin: 100px;\n"
-			"}\n"
-			"\n"
-			"li {\n"
-			"	top: 100px;\n"
-			"	margin: 100px;\n"
-			"}\n"
-			"\n"
-			"@media only screen and ( max-width: 600px ) {\n"
-			"	body {\n"
-			"		top: 100px;\n"
-			"		margin: 100px;\n"
-			"	}\n"
-			"}\n"
-		 "</style>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>{{ ghi }}</h2>\n"
-		 "	<p>\n"
-		 "		{{ abc }}\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>{{ asdfsadf }}\n"
-	},
-	#endif
-
-	#if 1
-	{
-		NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input.",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "<style>\n"
-			".container {\n"
-			"	top: 100px;\n"
-			"	margin: 100px;\n"
-			"}\n"
-			"\n"
-			"li {\n"
-			"	top: 100px;\n"
-			"	margin: 100px;\n"
-			"}\n"
-			"\n"
-			"@media only screen and ( max-width: 600px ) {\n"
-			"	body {\n"
-			"		top: 100px;\n"
-			"		margin: 100px;\n"
-			"	}}\n"
-		 "</style>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>{{ ghi }</h2>\n"
-		 "	<p>\n"
-		 "		{{ abc }}\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	#endif
-
-	#if 1
-	{
-		SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{ artillery }} <h2>{{ .rec }}</h2>\n"
-		 "	<p>\n"
-		 "		{{ .val }}\n"
-		 "	</p>\n"
-		 "{{/ artillery }}"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	#endif
-
-	#if 1
-	//one table
-	{
-		SinglezTable, "TABLE_SINGLE", "one level table",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# artillery }}"
-		 "	<h2>{{ .rec }}</h2>\n"
-		 "	<p>\n"
-		 "		{{ .val }}\n"
-		 "	</p>\n"
-		 "{{/ artillery }}"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me tired.\n"
-		 "	</p>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me giddy.\n"
-		 "	</p>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me ecstatic.\n"
-		 "	</p>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me a bother.\n"
-		 "	</p>\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	#endif
-
-	#if 1
-	{
-		DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test",
-		//Notice the cities.metadata loop block.  Teset for short and long keys...
-		//"    {{ .city }}, {{ .parent_state }} is a city full of {{ .metadata.population }} people.\n" 
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# cities }}\n"
-		 "\t<h2>{{ .city }}</h2>\n"
-		 "\t<p>\n"
-		 "\t\t{{ .city }}, {{ .parent_state }} is a city containing {{ .metadata.population }} people.\n" 
-		 "\t</p>\n"
-		 "\t<p>\n"
-		 "\t\t{{ .desc }}\n"
-		 "\t</p>\n"
-		 "\t<table>\n"
-		 "\t<thead>\n"
-		 "\t\t<th>Skyline</th>\n"
-		 "\t\t<th>Population</th>\n"
-		 "\t</thead>\n"
-		 "\t<tbody>\n"
-		 "\t{{# .metadata }}\n"
-		 "\t\t<tr>\n"
-		 "\t\t\t<td>Population: {{ .population }}</td>\n"  
-		 "\t\t\t<td>Claim to Fame: {{ cities.metadata.claim_to_fame }}</td>\n"
-		 "\t\t</tr>\n"
-		 "\t{{/ .metadata }}\n"
-		 "\t</tbody>\n"
-		 "\t</table>\n"
-		 "{{/ cities }}\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "\n"
-		 "	<h2>San Francisco</h2>\n"
-		 "	<p>\n"
-		 "    San Francisco, CA is a city full of 870887 people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "  	There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors.\n" 
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>Population: 870887</td>\n"  
-		 "			<td>Claim to Fame: The Real Silicon Valley</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n"
-		 "	</table>\n"
-		 "\n"
-		 "	<h2>New York</h2>\n"
-		 "	<p>\n"
-		 "    New York is a city full of 8750000 people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "    New York, NY is one of the most well-known destinations on earth and home to over 8 million residents.\n"
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>Population: 19750000</td>\n"  
-		 "			<td>Claim to Fame: The Greatest City on Earth</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n" "	</table>\n"
-		 "\n"
-		 "	<h2>Raleigh</h2>\n"
-		 "	<p>\n"
-		 "    Raleigh, NC is a city full of 350001 people.\n" 
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>350001</td>\n"  
-		 "			<td>Silicon Valley of the South</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n"
-		 "	</table>\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
+	//Expected failure should also be listed here
+#if 0
+	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
+	{ NozTable, "TABLE_NONE", "Template values with no tables." },
+	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 #endif
-	#if 1
-	{
-		DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test",
-		//Notice the cities.metadata loop block.  Teset for short and long keys...
-		//"    {{ .city }}, {{ .parent_state }} is a city full of {{ .metadata.population }} people.\n" 
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# cities }}\n"
-		 "\t<h2>{{ .city }}</h2>\n"
-		 "\t<p>\n"
-		 "\t\t{{ .city }}, {{ .parent_state }} is a city containing {{ .metadata.population }} people.\n" 
-		 "\t</p>\n"
-		 "\t<p>\n"
-		 "\t\t{{ .desc }}\n"
-		 "\t</p>\n"
-		 "\t<table>\n"
-		 "\t<thead>\n"
-		 "\t\t<th>Skyline</th>\n"
-		 "\t\t<th>Population</th>\n"
-		 "\t</thead>\n"
-		 "\t<tbody>\n"
-		 "\t{{# .metadata }}\n"
-		 "\t\t<tr>\n"
-		 "\t\t\t<td>Population: {{ .population }}</td>\n"  
-		 "\t\t\t<td>Claim to Fame: {{ cities.metadata.claim_to_fame }}</td>\n"
-		 "\t\t</tr>\n"
-		 "\t{{/ .metadata }}\n"
-		 "\t</tbody>\n"
-		 "\t</table>\n"
-		 "{{/ cities }}\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "\n"
-		 "	<h2>San Francisco</h2>\n"
-		 "	<p>\n"
-		 "    San Francisco, CA is a city full of 870887 people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "  	There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors.\n" 
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>Population: 870887</td>\n"  
-		 "			<td>Claim to Fame: The Real Silicon Valley</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n"
-		 "	</table>\n"
-		 "\n"
-		 "	<h2>New York</h2>\n"
-		 "	<p>\n"
-		 "    New York is a city full of 8750000 people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "    New York, NY is one of the most well-known destinations on earth and home to over 8 million residents.\n"
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>Population: 19750000</td>\n"  
-		 "			<td>Claim to Fame: The Greatest City on Earth</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n" "	</table>\n"
-		 "\n"
-		 "	<h2>Raleigh</h2>\n"
-		 "	<p>\n"
-		 "    Raleigh, NC is a city full of 350001 people.\n" 
-		 "	</p>\n"
-		 "	<table>\n"
-		 "	<thead>\n"
-		 "		<th>Skyline</th>\n"
-		 "		<th>Population</th>\n"
-		 "	</thead>\n"
-		 "	<tbody>\n"
-		 "    <tr>\n"
-		 "			<td>350001</td>\n"  
-		 "			<td>Silicon Valley of the South</td>\n"
-		 "    </tr>\n"
-		 "	</tbody>\n"
-		 "	</table>\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	{
-		DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# cities }}\n"
-		 "	<h2>{{ .city }}</h2>\n"
-		 "	<p>\n"
-		 "		{{ .city }} is a city full of {{ .population }} people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "    {{ .desc }}\n"
-		 "	</p>\n"
-		 "	<ul>\n"
-		 "	{{# ." SPACE_TEST " }}\n"
-		 "		<li>{{ $value }}</li>\n"  /*Notice that this is the only way to do this*/
-		 "	{{/ ." SPACE_TEST " }}\n"
-		 "	</ul>\n"
-		 "{{/ cities }}\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me tired.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me giddy.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me ecstatic.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me a bother.\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
+	{ NozTable, "TABLE_NONE", "Template values with no tables." },
+	{ SinglezTable, "TABLE_SINGLE", "one level table" },
+#if 0
+	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
+	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
+	//{ NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input." },
+	{	SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure" },
+#if 0
+	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
+	{	DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test" },
+	{	MultiLevelzTable, "TABLE_KV", "key and value" },
 #endif
-
-#if 1
-	//If you can't solve it, don't beat yourself up over it.
-	//Either try something else or approach it a different way...
-	{
-		DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# cities }}\n"
-		 "	<h2>{{ .city }}</h2>\n"
-		 "	<p>\n"
-		 "    {{ .city }} is a city full of {{ .population }} people.\n" 
-		 "	</p>\n"
-		 "	<p>\n"
-		 "    {{ .desc }}\n"
-		 "	</p>\n"
-		 "	<ul>\n"
-		 "	{{# cities." SPACE_TEST " }}\n"
-		 "		<li>{{ $value }}</li>\n"  /*Notice that this is the only way to do this*/
-		 "	{{/ cities." SPACE_TEST " }}\n"
-		 "	</ul>\n"
-		 "{{/ cities }}\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me tired.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me giddy.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me ecstatic.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me a bother.\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
-	//multi-level tables
-	{
-		MultiLevelzTable, "TABLE_KV", "key and value",
-		.src =
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "{{# artillery }}\n"
-		 "	<h2>{{$ key }}</h2>\n"
-		 "	<p>\n"
-		 "		{{$ val }}\n"
-		 "	</p>	\n"
-		 "{{/ artillery }}\n"
-		 "</body>\n"
-		 "</html>\n"
-		,
-		.cmp = 
-		 "<html>\n"
-		 "<head>\n"
-		 "</head>\n"
-		 "<body>\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me tired.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me giddy.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me ecstatic.\n"
-		 "	</p>	\n"
-		 "	<h2>Choo choo cachoo</h2>\n"
-		 "	<p>\n"
-		 "		MySQL makes me a bother.\n"
-		 "	</p>	\n"
-		 "</body>\n"
-		 "</html>\n"
-	},
 #endif
 	{ NULL }
 };
@@ -1034,9 +563,16 @@ struct Test tests[] =
 int main (int argc, char *argv[]) {
 	struct Test *test = tests;
 
+#if 0
+	//Need to add options
+
+	-v, --verbose    Dump the src and cmp
+	-c, --compact    Leave everything in one line (default)
+		(e.g. $TEST_NAME = SUCCESS (maybe add time) )
+#endif
+
 	//....
 	while ( test->kvset ) {
-		fprintf( stderr, "\n%s %p\n", test->name, test->kvset );
 		zTable *t = convert_lkv( test->kvset );
 		int rlen = 0;
 		unsigned char *r = NULL;
@@ -1044,54 +580,53 @@ int main (int argc, char *argv[]) {
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, t );
 
-
-if ( test->cmp ) {
-char bb[2048] = {0};
-sprintf( bb, "%s/%s", "tests/cmp", test->name );
-int fd = open( bb, O_CREAT | O_WRONLY ); 
-write( fd, test->cmp, strlen( test->cmp ) );
-close(fd);
-}
+		//Load both test files
+		test->src = read_file( test->name, "tests/src" ); 
+		test->cmp = read_file( test->name, "tests/cmp" );
 
 		//Enabling a dump of the original template kind of helps
 		write( 2, "===", 3 );
 		write( 2, test->src, strlen( test->src ) );
 		write( 2, "===", 3 );
 
-#if 0
-#if 0
+	#if 0
 		//This performs a one-shot templating function 
 		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
 			fprintf(stderr, "Error rendering template at item: %s\n", test->name );
 			goto destroy_zr;
 		}
-#else
-		int bal = zrender_check_syntax( rz, (unsigned char *)test->src, strlen(test->src) );
-		fprintf( stderr, "Template balanced? %d %c\n", bal, bal ? 'Y' : 'N' );
-		if ( !bal ) {
+	#else
+		//check the syntax
+		if ( !zrender_check_syntax( rz, (unsigned char *)test->src, strlen(test->src) ) ) {
 			fprintf( stderr, "%s\n", rz->errmsg );
 			goto destroy_zr;
 		}
 
 		//start the mapping process
-		zrender_userdata_to_map( rz, (unsigned char *)test->src, strlen( test->src ) );
+		if ( !zrender_userdata_to_map( rz, (unsigned char *)test->src, strlen( test->src ) ) ) {
+			fprintf( stderr, "%s\n", "Mapping failed." );
+			goto destroy_zr;
+		}
 
 		//Dump everything
-		zrender_print_table( rz->map );
-
-	#if 1
+		zrender_print_map( rz );
+		#if 0
 		//Do the render
 		if ( !( r = zrender_map_to_uint8t( rz, &rlen ) ) ) {
 			fprintf( stderr, "%s\n", "Something went wrong at replacement." ); 
 			goto destroy_zr;
 		}
+		#endif
 	#endif
-#endif
 
 		//Dump the message
 		write( 2, r, rlen );
-#endif
-#if 1
+
+		//This is to automate render testing...	
+		int cmp = memcmp( r, test->cmp, rlen ); 
+		fprintf( stderr, "%s\n", cmp ? "FAILED" : "SUCCESS" );
+
+#if 0
 destroy_buf:
 destroy_zr:
 destroy:
@@ -1104,11 +639,10 @@ destroy_zr:
 destroy:
 		lt_free( t );
 		free( t );
-#if 0
-		//This is to automate render testing...	
-		int cmp = memcmp( r, test->cmp, rlen ); 
-		fprintf( stderr, "%s\n", cmp ? "FAILED" : "SUCCESS" );
-#endif
+		free( (void *)test->src );
+		if ( test->cmp ) {
+			free( (void *)test->cmp );
+		}
 #endif
 		test++;
 	}

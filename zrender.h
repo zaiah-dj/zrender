@@ -9,15 +9,19 @@
 
 #ifndef DEBUG_H
  #define RPRINTF(a,b,blen)
+
  #define ZRENDER_PRINTF(...)
+
 #else
  #define ZRENDER_PRINTF(...) \
 	fprintf( stderr, "DEBUG: %s[%d]: ", __FILE__, __LINE__ ) && \
 	fprintf( stderr, __VA_ARGS__ )
+
  #define RPRINTF(a,b,blen) \
 	memset( rprintchar, 0, sizeof(rprintchar) ); \
 	memcpy( rprintchar, b, (blen >= sizeof(rprintchar)) ? sizeof(rprintchar) - 1 : blen ); \
 	ZRENDER_PRINTF( "%s > %s(...): '%s'\n", a, __func__, replace_chars( rprintchar, strlen(rprintchar) ) );
+
 #endif
 
 #define EXTRACTOR(name) \
@@ -109,8 +113,12 @@ void zrender_free( zRender * );
 
 const char * zrender_strerror( zRender * );
 
+ void zrender_print_map2( struct map **map ) ;
+
 #ifdef DEBUG_H
- void zrender_print_table ( struct map ** );
+
+ void zrender_print_map( zRender * );
+
  #define DUMPACTION( NUM ) \
 	( NUM == LOOP_START ) ? "LOOP_START" : \
 	( NUM == LOOP_END ) ? "LOOP_END" : \
@@ -121,7 +129,7 @@ const char * zrender_strerror( zRender * );
 	( NUM == BOOLEAN ) ? "BOOLEAN" : \
 	( NUM == RAW ) ? "RAW" : "UNKNOWN" 
 #else
- #define zrender_print_table(a)
+ #define zrender_print_map(a)
 #endif
 
 #endif

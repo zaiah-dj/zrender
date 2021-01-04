@@ -199,7 +199,8 @@ MAPPER(map_complex_extract) {
 		int c = 0;
 		int hlen = 0;
 		int pos = 0;
-		struct map **w = &( *parent )[ *plen - 1 ]; ZRENDER_PRINTF( "ptr: %p, len: %d\n", w, *plen );
+		struct map **w = &( *parent )[ *plen - 1 ]; 
+		ZRENDER_PRINTF( "ptr: %p, len: %d\n", w, *plen );
 		ZRENDER_PRINTF( "pos: %d, children: %d\n", (*w)->pos, (*w)->children );
  
 		while ( (*w)->pos < (*w)->children ) {
@@ -260,7 +261,7 @@ MAPPER(map_loop_end) {
 	if ( *parent ) {
 		//free( &( *parent )[ *plen ] );
 		parent--, (*plen)--;
-		ZRENDER_PRINTF( "Parent: %p, length: %d\n", *parent, *plen );
+		//ZRENDER_PRINTF( "Parent: %p, length: %d\n", *parent, *plen );
 	}
 }
 
@@ -347,6 +348,7 @@ zRender * zrender_init() {
 	if ( !zr || !memset( zr, 0, sizeof( zRender ) ) ) {
 		return NULL;
 	}
+	memset( zr->mapset, 0, sizeof(zr->mapset));
 	return zr;
 }
 
@@ -526,6 +528,7 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, i
 			int alen = 0, nlen = 0, mark = 0;	
 			unsigned char *p = zrender_trim( r.src, " ", r.size - 1, &nlen );
 			struct map *rp = init_map( *p );
+			rp->action = *p;
 
 			//If no character handler exists, we fallback to 1
 			if ( ( z = rz->mapset[ *p ] ) || ( z = rz->mapset[1] ) ) {
@@ -549,7 +552,9 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, i
 	//Destroy the parent list
 	free( pp );
 #endif
-	return ( rz->map = rr );
+	rz->map = rr;
+	zrender_print_map( rz );
+	return rz->map;
 }
 
 
@@ -613,28 +618,21 @@ void zrender_free_map( struct map **map ) {
 	while ( tt && *tt ) {
 		struct map *item = *tt;
 
-		//Dump the unchanging elements out...
-		ZRENDER_PRINTF( "[%3d] => action: %-16s", di++, DUMPACTION( item->action ) );
-
 	#if 0
 		if ( item->action == RAW )
 			ZRENDER_PRINTF( "Nothing to free...\n" );
 		else 
 	#endif
 		if ( item->action == EXECUTE ) {
-			ZRENDER_PRINTF( "Freeing pointer to exec content..." );
 			free( item->ptr );
 		}
 		else {
-			ZRENDER_PRINTF( "Freeing int lists..." );
 			int **ii = item->hashList;
 			while ( ii && *ii ) {
-				ZRENDER_PRINTF( "item->intlist: %p\n", *ii );	
 				free( *ii ); 
 				ii++;
 			}
 			free( item->hashList );
-			ZRENDER_PRINTF( "\n" );
 		}
 		free( item );
 		tt++;
@@ -667,13 +665,17 @@ const char * zrender_strerror( zRender *z ) {
 
 #ifdef DEBUG_H
 //Purely for debugging, see what came out
-void zrender_print_table( struct map **map ) {
+//void zrender_print_map( zRender *rz ) {
+void zrender_print_map( zRender *rz ) {
+
 	int di = 0;
-	while ( *map ) {
+	struct map **map = rz->map;
+	while ( map && *map ) {
 		struct map *item = *map;
 
 		//Dump the unchanging elements out...
-		ZRENDER_PRINTF( "[%3d] => action: %-16s", di++, DUMPACTION( item->action ) );
+		ZRENDER_PRINTF( "[%3d] => action: '%c' %d %-16s", di++, item->action, item->action,
+			DUMPACTION( item->action ) );
 
 		if ( item->action == RAW || item->action == EXECUTE ) {
 			unsigned char *p = (unsigned char *)item->ptr;
