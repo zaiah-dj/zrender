@@ -526,8 +526,9 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, i
 		}
 		else if ( r.chr == check[1] && *r.ptr == check[1] )	 {
 			int alen = 0, nlen = 0, mark = 0;	
-			unsigned char *p = zrender_trim( r.src, " ", r.size - 1, &nlen );
-			struct map *rp = init_map( *p );
+			struct map *rp = init_map( 0 );
+fprintf( stderr, "Got action: %c\n", *p ); getchar();
+			unsigned char *p = zrender_trim( &src[ r.pos ], " ", r.size - 1, &nlen );
 			rp->action = *p;
 
 			//If no character handler exists, we fallback to 1
