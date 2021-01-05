@@ -43,6 +43,13 @@ enum {
 	UNINIT = 127,
 };
 
+
+struct premap {
+	unsigned char *ptr;
+	int len;
+};
+
+
 struct map { 
 	char action; 
 	int **hashList, **olist;
@@ -84,13 +91,17 @@ struct zrSet {
 };
 
 typedef struct zRender {
-	const char *zStart, *zEnd;
-	void *userdata;
-	int zrlen;
-	struct map **map;	
-	struct zrSet *mapset[128]; //takes up more space
+	const char *zStart; 
+	const char *zEnd;
 	int error;
 	char errmsg[1024];
+
+	void *userdata;
+	struct premap **premap;	
+	struct map **map;	
+	struct zrSet *mapset[128]; //takes up more space
+	int zrlen;
+
 } zRender;
 
 void extract_table_value( zKeyval *, uint8_t **, int *, uint8_t *, int );
