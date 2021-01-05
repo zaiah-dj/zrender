@@ -32,22 +32,20 @@
 
 enum {
 	RAW = 0,
-	LOOP_START = 30,
-	LOOP_END = 31,
 	SIMPLE_EXTRACT = 32,
-	COMPLEX_EXTRACT = 33,
-	EACH_KEY = 34,
-	EXECUTE = 35,
-	BOOLEAN = 36,
-	BLOCK_START = 100,
-	BLOCK_END = 101,
+	BOOLEAN = 33,
+	LOOP_START = 35,
+	LOOP_END = 47,
+	COMPLEX_EXTRACT = 46,
+	EACH_KEY = 36,
+	EXECUTE = 96,
 	TERM = -2,
 	UNINIT = 127,
 };
 
 struct map { 
 	char action; 
-	int **hashList; 
+	int **hashList, **olist;
 	int len; 
 	int pos; 
 	void *ptr; 
@@ -60,6 +58,18 @@ struct ptr {
 	struct map **index;
 	int current;
 	int children;	
+};
+
+//call it arg for now
+struct arg {
+	struct map **index; //?
+	struct map **parent; //?
+	int *plen;  //length of parent array (not sure why we need it yet)
+	int *dlen;  //length written to destination
+	int current; //Current index of whatever we may be dealing with
+	int children; //How many children of whatever we may be dealing with
+	unsigned char *dest; //Destination block
+	void *userdata;	//Userdata of whatever we may be dealing with
 };
 
 typedef void (*Mapper)
@@ -113,8 +123,6 @@ void zrender_free( zRender * );
 
 const char * zrender_strerror( zRender * );
 
- void zrender_print_map2( struct map **map ) ;
-
 #ifdef DEBUG_H
 
  void zrender_print_map( zRender * );
@@ -128,8 +136,11 @@ const char * zrender_strerror( zRender * );
 	( NUM == EXECUTE ) ? "EXECUTE" : \
 	( NUM == BOOLEAN ) ? "BOOLEAN" : \
 	( NUM == RAW ) ? "RAW" : "UNKNOWN" 
+
 #else
  #define zrender_print_map(a)
+ #define DUMPACTION( NUM )
+
 #endif
 
 #endif

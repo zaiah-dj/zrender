@@ -13,6 +13,7 @@ static char * replace_chars ( char *src, int srclen ) {
 #endif
 
 
+//Utility to add to an unsigned character block
 static unsigned char *append_to_uint8t ( uint8_t **dest, int *len, uint8_t *src, int srclen ) {
 	if ( !( *dest = realloc( *dest, (*len) + srclen ) ) ) {	
 		return NULL;
@@ -27,23 +28,14 @@ static unsigned char *append_to_uint8t ( uint8_t **dest, int *len, uint8_t *src,
 }
 
 
-//Add to series
-static void * add_item_to_list( void ***list, void *element, int size, int * len ) {
-#if 0
-	fprintf( stderr, "list => %p, %d, %d\n", *list, (*len), (*len) + 2 );
-#endif
 
+//Utility to add to a series of items
+static void * add_item_to_list( void ***list, void *element, int size, int * len ) {
 	//Reallocate
 	if (( (*list) = realloc( (*list), size * ( (*len) + 2 ) )) == NULL ) {
 		ZRENDER_PRINTF( "Failed to reallocate block from %d to %d\n", size, size * ((*len) + 2) ); 
 		return NULL;
 	}
-
-#if 0
-	fprintf( stderr, 
-		"Successfully reallocated block to size %d\n", size * ((*len) + 2) ); 
-	fprintf( stderr, "list => %p, %d, %d, %d\n", *list, (*len), (*len) + 1, size * ((*len) + 2 ) );
-#endif
 
 	(*list)[ *len ] = element; 
 	(*list)[ (*len) + 1 ] = NULL; 
@@ -52,7 +44,8 @@ static void * add_item_to_list( void ***list, void *element, int size, int * len
 }
 
 
-//Didn't I write something to add to a buffer?
+
+//Utility to return a value from a zTable
 void extract_table_value ( zKeyval *lt, unsigned char **ptr, int *len, unsigned char *t, int tl ) {
 	if ( lt->value.type == LITE_TXT ) {
 		*len = strlen( lt->value.v.vchar ); 
@@ -75,14 +68,15 @@ void extract_table_value ( zKeyval *lt, unsigned char **ptr, int *len, unsigned 
 }
 
 
+
+//Maps (in memory) a raw block from unsigned character data
 MAPPER(map_raw_extract) {
-	RPRINTF( "\nRAW", ptr, len ); 
-	row->ptr = ptr;
-	row->len = len;
-	row->action = RAW;
+	row->ptr = ptr, row->len = len, row->action = RAW;
 }
 
 
+
+//Maps (in memory) a single reference to a zTable index within unsigned character data
 MAPPER(map_simple_extract) {
 	zTable *tt = (zTable *)t;
 	int hlen=0, hash = lt_get_long_i( tt, ptr, len ); 
@@ -93,15 +87,11 @@ MAPPER(map_simple_extract) {
 }
 
 
-//...
+//Maps (in memory) the start point of a loop within unsigned character data
 MAPPER(map_loop_start) { 
-	int hash = -1;
-	int hlen = 0;
-	int blen = 0;
-	int element_count = 0;
+	int hash = -1, hlen = 0, blen = 0, element_count = 0;
 	unsigned char bbuf[ 2048 ] = { 0 };
 	zTable *tt = (zTable *)t;
-	RPRINTF( "LOOP_START", ptr, len );
 
 	//If a parent should exist, copy the parent's text 
 	if ( !( *parent ) ) {
@@ -192,6 +182,8 @@ ZRENDER_PRINTF( "struct map: %p", cp );
 }
 
 
+
+//Maps a key within a loop within unsigned character data. 
 MAPPER(map_complex_extract) {
 	RPRINTF( "\nCOMPLEX", ptr, len );
 	ZRENDER_PRINTF( "plen: %d\n", *plen );
@@ -254,52 +246,44 @@ MAPPER(map_complex_extract) {
 }
 
 
-//....
+
+//Marks the end of a loop within unsigned character data
 MAPPER(map_loop_end) {
-	RPRINTF( "LOOP_END", ptr, len );
-	ZRENDER_PRINTF( "Parent: %p  length: %d\n", parent, *plen );
-	if ( *parent ) {
-		//free( &( *parent )[ *plen ] );
-		parent--, (*plen)--;
-		//ZRENDER_PRINTF( "Parent: %p, length: %d\n", *parent, *plen );
-	}
+	if ( *parent ) parent--, (*plen)--;
 }
 
 
-//....
+
+//Extract raw character data and copies to an unsigned character buffer
 EXTRACTOR(extract_raw) {
-	ZRENDER_PRINTF( "%-20s, len: %3d\n", "xRAW", (**row)->len );
 	append_to_uint8t( dst, dlen, src, len );
 }
 
 
+
+//Copies
 EXTRACTOR(extract_loop_start) {
-	ZRENDER_PRINTF( "%-20s, %d\n", "xLOOP_START", (**row)->len );
 	//struct dep *d = (struct dep * )t;
 	(*ptr)++;
-	(*ptr)->index = &(**row);
-	(*ptr)->current = 0;
-	(*ptr)->children = (**row)->children;
+	(*ptr)->index = &(**row), (*ptr)->current = 0, (*ptr)->children = (**row)->children;
 }
 
 
-EXTRACTOR(extract_loop_end) {
-	ZRENDER_PRINTF( "%-20s\n", "xLOOP_END" );
-	(*ptr)->current++;
-	ZRENDER_PRINTF( "%d ?= %d\n", (*ptr)->current, (*ptr)->children );
-	ZRENDER_PRINTF( "%p ?= %p\n", (**row), (*ptr)->index );
 
-	if ( (*ptr)->current == (*ptr)->children )
+//...
+EXTRACTOR(extract_loop_end) {
+	//(*ptr)->current++;
+	if ( ++(*ptr)->current == (*ptr)->children )
 		(*ptr)--;
 	else {
 		*row = (*ptr)->index;
 	}
-	//ZRENDER_PRINTF( "%p ?= %p\n", (**row), (*ptr)->index );
 }
 
 
+
+//...
 EXTRACTOR(extract_simple_extract) {
-	ZRENDER_PRINTF( "%-20s\n", "xSIMPLE_EXTRACT" );
 	zTable *tt = (zTable *)t;
 	if ( (**row)->hashList ) {
 		int hash = **( (**row)->hashList ); 
@@ -314,11 +298,11 @@ EXTRACTOR(extract_simple_extract) {
 }
 
 
+
+//...
 EXTRACTOR(extract_complex_extract) {
-	ZRENDER_PRINTF( "%-20s\n", "xCOMPLEX EXTRACT" );
 	if ( (**row)->hashList ) {
 		//If there is a pointer, it does not move until I get through all three
-		ZRENDER_PRINTF( "Getting entry: %d\n", **( (**row)->hashList) );
 		int **list = (**row)->hashList;
 		int hash = 0;
 		//Get the type and length
@@ -335,11 +319,14 @@ EXTRACTOR(extract_complex_extract) {
 }
 
 
+
+//....
 int * zrender_copy_int ( int i ) {
 	int *h = malloc( sizeof ( int ) );
 	memcpy( h, &i, sizeof( int ) );
 	return h; 
 }
+
 
 
 //Initialize the object
@@ -351,6 +338,7 @@ zRender * zrender_init() {
 	memset( zr->mapset, 0, sizeof(zr->mapset));
 	return zr;
 }
+
 
 
 //Use the default templating language (mustache)
@@ -369,6 +357,7 @@ void zrender_set_default_dialect( zRender *rz ) {
 }
 
 
+
 //...
 struct map * init_map ( int action ) {
 	struct map *rp = malloc( sizeof( struct map ) );
@@ -385,21 +374,20 @@ struct map * init_map ( int action ) {
 }
 
 
+
 //Set start and optional end boundaries of whatever language is chosen.
 void zrender_set_boundaries ( zRender *rz, const char *s, const char *end ) {
-	if ( s ) {
-		rz->zStart = strdup( s );	
-	}
-	if ( end ) {
-		rz->zEnd = strdup( end );
-	}
+	( s ) ? rz->zStart = strdup( s ) : 0;
+	( end ) ? rz->zEnd = strdup( end ) : 0;
 }
+
 
 
 //Set the source for fetching data
 void zrender_set_fetchdata( zRender *rz, void *t ) { 
 	rz->userdata = t;	
 }
+
 
 
 //Set each character for replacement (we assume that it's just one)
@@ -409,6 +397,7 @@ void zrender_set( zRender *rz, const char map, Mapper mp, Extractor xp ) {
 	record->extractor = xp;
 	rz->mapset[ (int)map ] = record;
 }
+
 
 
 //Trim an unsigned character block 
@@ -432,6 +421,7 @@ unsigned char *zrender_trim ( const unsigned char *msg, const char *trim, int le
 	( nlen ) ? *nlen = nl : 0;
 	return forwards;
 }
+
 
 
 //Check that the data is balanced.
@@ -507,6 +497,7 @@ int zrender_check_syntax ( zRender *rz, const unsigned char *src, int srclen ) {
 }
 
 
+
 //Convert userdata to an array map
 struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, int srclen ) {
 	struct map **rr = NULL, **pr = NULL;
@@ -526,10 +517,8 @@ struct map ** zrender_userdata_to_map ( zRender *rz, const unsigned char *src, i
 		}
 		else if ( r.chr == check[1] && *r.ptr == check[1] )	 {
 			int alen = 0, nlen = 0, mark = 0;	
-			struct map *rp = init_map( 0 );
-fprintf( stderr, "Got action: %c\n", *p ); getchar();
 			unsigned char *p = zrender_trim( &src[ r.pos ], " ", r.size - 1, &nlen );
-			rp->action = *p;
+			struct map *rp = init_map( *p );
 
 			//If no character handler exists, we fallback to 1
 			if ( ( z = rz->mapset[ *p ] ) || ( z = rz->mapset[1] ) ) {
@@ -548,15 +537,13 @@ fprintf( stderr, "Got action: %c\n", *p ); getchar();
 		}
 	}
 
-#if 0
-	//Move through each of the rows 
 	//Destroy the parent list
-	free( pp );
-#endif
-	rz->map = rr;
-	zrender_print_map( rz );
-	return rz->map;
+	zrender_free_map( pr );
+
+	//Return just what we need
+	return ( rz->map = rr );
 }
+
 
 
 //Merge the values referenced in the map array into an unsigned character block
@@ -569,19 +556,32 @@ unsigned char *zrender_map_to_uint8t ( zRender *rz, int *newlen ) {
 
 	while ( map && *map ) {
 		struct map *rp = *map;
+
+#if 1
+		//Using function pointers
+
 		struct zrSet *z = NULL; 
 		//If no character handler exists, we fallback to 1
 		if ( ( z = rz->mapset[ (int)rp->action ] ) || ( z = rz->mapset[ 1 ] ) ) { 
-			ZRENDER_PRINTF("RUNNING EXTRACTOR on %c\n", rp->action ? ( ( rp->action == 1 ) ? 'S' : rp->action ) : 'R' );
+			//ZRENDER_PRINTF("RUNNING EXTRACTOR on %c\n", rp->action ? ( ( rp->action == 1 ) ? 'S' : rp->action ) : 'R' );
 			z->extractor( &map, &block, &blocklen, rp->ptr, rp->len, &ptr, rz->userdata );
 		}
+#else
+
+		//Not using function pointers (but maybe doing something else?)
+
+#endif
+
 		map++;
 	}
+
+	//loop through ptr
 
 	//The final step is to assemble everything...
 	*newlen = blocklen;
 	return block;
 }
+
 
 
 //Do all the steps to make templating quick and easy.
@@ -611,38 +611,33 @@ unsigned char *zrender_render( zRender *rz, const unsigned char *src, int srclen
 }
 
 
+
 //Destroy the zRender structure
 void zrender_free_map( struct map **map ) {
 	struct map **tt = map;
-	int di = 0;
-
 	while ( tt && *tt ) {
-		struct map *item = *tt;
-
-	#if 0
-		if ( item->action == RAW )
-			ZRENDER_PRINTF( "Nothing to free...\n" );
-		else 
-	#endif
-		if ( item->action == EXECUTE ) {
-			free( item->ptr );
-		}
+//fprintf( stderr, "Action: %s, Set: %p\n", DUMPACTION( (*tt)->action ), *tt );
+		if ( (*tt)->action == EXECUTE )
+			free( (*tt)->ptr );
 		else {
-			int **ii = item->hashList;
+			int **ii = (*tt)->hashList;
+fprintf( stderr, "Freeing set: %p\n", ii );
 			while ( ii && *ii ) {
+fprintf( stderr, "Freeing item: %p\n", *ii );
 				free( *ii ); 
 				ii++;
 			}
-			free( item->hashList );
+			//free( (*tt)->hashList );
 		}
-		free( item );
+		free( *tt );
 		tt++;
 	}
-
 	free( map );
 }
 
 
+
+//...
 void zrender_free_mapset ( struct zrSet **mapset, int size ) {
 	for ( int i=0; i < size; i++ ) {
 		if ( mapset[ i ] ) free( mapset[ i ] );
@@ -650,6 +645,8 @@ void zrender_free_mapset ( struct zrSet **mapset, int size ) {
 }
 
 
+
+//...
 void zrender_free( zRender *rz ) {
 	zrender_free_map( rz->map );
 	zrender_free_mapset( rz->mapset, sizeof(rz->mapset)/sizeof(struct zrSet *) );
@@ -659,6 +656,8 @@ void zrender_free( zRender *rz ) {
 }
 
 
+
+//...
 const char * zrender_strerror( zRender *z ) {
 	return z->errmsg;
 }
@@ -666,9 +665,7 @@ const char * zrender_strerror( zRender *z ) {
 
 #ifdef DEBUG_H
 //Purely for debugging, see what came out
-//void zrender_print_map( zRender *rz ) {
 void zrender_print_map( zRender *rz ) {
-
 	int di = 0;
 	struct map **map = rz->map;
 	while ( map && *map ) {

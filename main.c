@@ -610,7 +610,8 @@ int main (int argc, char *argv[]) {
 
 		//Dump everything
 		zrender_print_map( rz );
-		#if 0
+
+		#if 1
 		//Do the render
 		if ( !( r = zrender_map_to_uint8t( rz, &rlen ) ) ) {
 			fprintf( stderr, "%s\n", "Something went wrong at replacement." ); 
