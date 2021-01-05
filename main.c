@@ -134,7 +134,7 @@ zKeyval SinglezTable[] = {
 		/*Database records look a lot like this*/
 		{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 			{ TEXT_KEY( "val" ), TEXT_VALUE( "MySQL makes me a bother." ) },
-			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Choo choo cachoo" ) },
+			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Glad bacon" ) },
 			{ TRM() },
 		{ INT_KEY( 1 )       , TABLE_VALUE( )         },
 			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Choo choo cachoo" ) },
@@ -142,11 +142,11 @@ zKeyval SinglezTable[] = {
 			{ TRM() },
 		{ INT_KEY( 2 )       , TABLE_VALUE( )         },
 			{ TEXT_KEY( "val" ), TEXT_VALUE( "MySQL makes me giddy." ) },
-			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Choo choo cachoo" ) },
+			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Happy, happy, happy is the man!" ) },
 			{ TRM() },
 		{ INT_KEY( 3 )       , TABLE_VALUE( )         },
 			{ TEXT_KEY( "val" ), TEXT_VALUE( "MySQL makes me tired." ) },
-			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Choo choo cachoo" ) },
+			{ TEXT_KEY( "rec" ), TEXT_VALUE( "Baby says 'Feed Me'" ) },
 			{ TRM() },
 		{ TRM() },
 

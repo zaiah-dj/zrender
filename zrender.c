@@ -95,7 +95,6 @@ MAPPER(map_loop_start) {
 
 	//If a parent should exist, copy the parent's text 
 	if ( !( *parent ) ) {
-ZRENDER_PRINTF( "no parent\n" );
 		//Copy the data
 		memcpy( bbuf, ptr, blen = len );
 
@@ -196,7 +195,6 @@ MAPPER(map_complex_extract) {
 		ZRENDER_PRINTF( "pos: %d, children: %d\n", (*w)->pos, (*w)->children );
  
 		while ( (*w)->pos < (*w)->children ) {
-#if 1
 			//Move to the next block or build a sequence
 			if ( c < (*plen - 1) ) {
 				w++, c++;
@@ -204,7 +202,7 @@ MAPPER(map_complex_extract) {
 			}
 			
 			//Generate the hash strings
-			if ( 1 ) {
+			//if ( 1 ) {
 			struct map **xx = *parent;
 			unsigned char tr[ 2048 ] = { 0 };
 			int trlen = 0;
@@ -222,7 +220,7 @@ MAPPER(map_complex_extract) {
 			//Check for this hash, save each and dump the list...
 			int hh = lt_get_long_i( t, tr, trlen );
 			zrender_add_item( &row->hashList, zrender_copy_int( hh ), int *, &hlen ); 
-			}
+			//}
 
 			//Increment the number 
 			while ( 1 ) {
@@ -239,8 +237,8 @@ MAPPER(map_complex_extract) {
 					}
 				}
 			}
-#endif
 		}
+		row->len = hlen;
 		(*w)->pos = 0;
 	}
 }
@@ -314,7 +312,16 @@ EXTRACTOR(extract_complex_extract) {
 			extract_table_value( lt, &iptr, &itemlen, nbuf, sizeof(nbuf) ); 
 			append_to_uint8t( dst, dlen, iptr, itemlen );
 		}
+
 		(**row)->hashList++;
+		fprintf( stderr, "%d\n", (**row)->len );
+		fprintf( stderr, "%p\n", (**row)->hashList ); getchar();
+
+		if ( (**row)->hashList == NULL ) {
+			fprintf(stderr,"you be null brah\n" );
+			getchar();
+			//(**row)->hashList -= (**row)->len;
+		}
 	}
 }
 
