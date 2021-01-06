@@ -64,6 +64,8 @@ zKeyval SinglezTable[] = {
 		{ INT_KEY( 7009 )    , TEXT_VALUE( "The quick brown fox jumps over the lazy dog for the last time." )  },
 		{ TRM() },
 
+	{ TEXT_KEY( "mickey" ), TEXT_VALUE( "goofy" ) },
+
 	{ TEXT_KEY( "artillery" )       , TABLE_VALUE( )         },
 		/*Database records look a lot like this*/
 		{ INT_KEY( 0 )       , TABLE_VALUE( )         },

@@ -43,11 +43,29 @@ enum {
 	UNINIT = 127,
 };
 
+struct xdesc;
+struct xmap;
 
 struct premap {
 	unsigned char *ptr;
 	int len;
 };
+
+struct xdesc {
+	int children;
+	int index;
+	struct xmap *pxmap;
+	struct premap **cxmap;
+};
+
+
+struct xmap {
+	unsigned char *ptr;
+	short len;
+	short type;
+	struct xdesc *parent;
+};
+
 
 
 struct map { 
@@ -99,6 +117,9 @@ typedef struct zRender {
 	void *userdata;
 	struct premap **premap;	
 	struct map **map;	
+	struct xmap **xmap; //?
+	unsigned char xmapset[128];
+
 	struct zrSet *mapset[128]; //takes up more space
 	int zrlen;
 

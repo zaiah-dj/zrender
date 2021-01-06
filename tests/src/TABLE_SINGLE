@@ -4,7 +4,7 @@
 <body>
 {{ #artillery }}	<h2>{{ .rec }}</h2>
 	<p>
-		{{ .val }}
+		{{ mickey }} {{ .val }}
 	</p>
 {{ /artillery }}</body>
 </html>
