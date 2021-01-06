@@ -490,8 +490,40 @@ zTable *convert_lkv ( zKeyval *kv ) {
 	{ #k, k }
 
 
-//read file and path
-char *read_file ( const char *name, const char *path  ) {
+
+struct Test {
+	zKeyval *kvset;
+	const char *name, *desc;
+	const char *src, *cmp;
+	unsigned char *dest;
+	int dlen;
+};
+
+
+struct Test tests[] = {
+	//Expected failure should also be listed here
+	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
+	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
+	{ NozTable, "TABLE_NONE", "Template values with no tables." },
+	{ SinglezTable, "TABLE_SINGLE", "one level table" },
+#if 0
+	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
+	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
+	//{ NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input." },
+	{	SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure" },
+#if 0
+	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
+	{	DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test" },
+	{	MultiLevelzTable, "TABLE_KV", "key and value" },
+#endif
+#endif
+	{ NULL }
+};
+
+
+
+//Utility to read file and path
+static char *read_file ( const char *name, const char *path  ) {
 	char *buf = NULL, bb[2048] = {0};
 	struct stat sb = {0};
 	int fd = 0;
@@ -512,57 +544,16 @@ die:
 }
 
 
-struct Test {
-	zKeyval *kvset;
-	const char *name, *desc;
-	const char *src, *cmp;
-};
+//Utility to write out unsigned data
+static void write_unsigned ( unsigned char *msg, int msglen ) {
+	write( 2, "<<<<<<<<<<<<<<<<<<<<\n", 21 );
+	write( 2, msg, msglen );
+	write( 2, ">>>>>>>>>>>>>>>>>>>>\n", 21 );
+}
 
-#if 0
-struct Test tests[] = {
-	TEST(NozTable),
-	TEST(SinglezTable),
-	TEST(DoublezTableAlpha),
-	TEST(DoublezTableNumeric),
-	TEST(MultiLevelzTable),
-	{ NULL }
-};
-#endif
 
-struct Test tests[] = 
-{
-	//These should be pretty easy to read:
-	//.name   = Name of the test
-	//.desc   = A quick description of the test
-	//.src = the input that the test will use for find and replace
-	//.cmp = the constant to compare against to make sure that rendering worked
-	//.values = the zTable to use for values (these tests do not test any parsing)
-
-	//Expected failure should also be listed here
-#if 0
-	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
-	{ NozTable, "TABLE_NONE", "Template values with no tables." },
-	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
-#endif
-	{ NozTable, "TABLE_NONE", "Template values with no tables." },
-	{ SinglezTable, "TABLE_SINGLE", "one level table" },
-#if 0
-	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
-	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
-	//{ NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input." },
-	{	SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure" },
-#if 0
-	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
-	{	DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test" },
-	{	MultiLevelzTable, "TABLE_KV", "key and value" },
-#endif
-#endif
-	{ NULL }
-};
 
 int main (int argc, char *argv[]) {
-	struct Test *test = tests;
-
 #if 0
 	//Need to add options
 
@@ -572,80 +563,58 @@ int main (int argc, char *argv[]) {
 #endif
 
 	//....
-	while ( test->kvset ) {
-		zTable *t = convert_lkv( test->kvset );
-		int rlen = 0;
-		unsigned char *r = NULL;
+	struct Test *t = tests;
+
+	while ( t->kvset ) {
+		zTable *tt = convert_lkv( t->kvset );
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
-		zrender_set_fetchdata( rz, t );
+		zrender_set_fetchdata( rz, tt );
 
-		//Load both test files
-		test->src = read_file( test->name, "tests/src" ); 
-		test->cmp = read_file( test->name, "tests/cmp" );
-
-		//Enabling a dump of the original template kind of helps
-		write( 2, "===", 3 );
-		write( 2, test->src, strlen( test->src ) );
-		write( 2, "===", 3 );
+		//Load both t files
+		t->src = read_file( t->name, "tests/src" ); 
+		t->cmp = read_file( t->name, "tests/cmp" );
+		write_unsigned( (unsigned char *)t->src, strlen( t->src ) );
 
 	#if 0
 		//This performs a one-shot templating function 
-		if ( !( r = zrender_render( rz, (unsigned char *)test->src, strlen(test->src), &rlen ) ) ) {
-			fprintf(stderr, "Error rendering template at item: %s\n", test->name );
+		if ( !( r = zrender_render( rz, (unsigned char *)t->src, strlen(t->src), &rlen ) ) ) {
+			fprintf(stderr, "Error rendering template at item: %s\n", t->name );
 			goto destroy_zr;
 		}
 	#else
-		//check the syntax
-		if ( !zrender_check_syntax( rz, (unsigned char *)test->src, strlen(test->src) ) ) {
-			fprintf( stderr, "%s\n", rz->errmsg );
-			goto destroy_zr;
+		//These ought to be seperated out
+		if ( !zrender_set_marks( rz, (unsigned char *)t->src, strlen( t->src ) ) ) {
+			fprintf( stderr, "set_marks failed\n" ); return 1;
 		}
 
-		//start the mapping process
-		if ( !zrender_userdata_to_map( rz, (unsigned char *)test->src, strlen( test->src ) ) ) {
-			fprintf( stderr, "%s\n", "Mapping failed." );
-			goto destroy_zr;
+		if ( !zrender_convert_marks( rz ) ) {
+			fprintf( stderr, "convert_marks failed\n" ); return 1;
 		}
 
-		//Dump everything
-		zrender_print_map( rz );
-
-		#if 1
-		//Do the render
-		if ( !( r = zrender_map_to_uint8t( rz, &rlen ) ) ) {
-			fprintf( stderr, "%s\n", "Something went wrong at replacement." ); 
-			goto destroy_zr;
+		if ( !zrender_interpret( rz, &t->dest, &t->dlen ) ) {
+			fprintf( stderr, "interpret failed\n" ); return 1;
 		}
-		#endif
 	#endif
 
 		//Dump the message
-		write( 2, r, rlen );
+		write_unsigned( t->dest, t->dlen );
 
-		//This is to automate render testing...	
-		int cmp = memcmp( r, test->cmp, rlen ); 
-		fprintf( stderr, "%s\n", cmp ? "FAILED" : "SUCCESS" );
-
-#if 0
-destroy_buf:
-destroy_zr:
-destroy:
-#else
-		//Destroy everything...
-destroy_buf:
-		free( r );
-destroy_zr:
-		zrender_free( rz );
-destroy:
-		lt_free( t );
-		free( t );
-		free( (void *)test->src );
-		if ( test->cmp ) {
-			free( (void *)test->cmp );
+	#if 0
+		if ( t->cmp ) {
+			fprintf( stderr, "%s\n", 
+				memcmp( t->dest, t->cmp, t->dlen ) ? "FAILED" : "SUCCESS" );
 		}
-#endif
-		test++;
+	#endif
+
+		//Destroy everything...
+		free( t->dest );
+		zrender_free( rz );
+		lt_free( tt );
+		free( tt );
+		free( (void *)t->src );
+		( t->cmp ) ? free( (void *)t->cmp ) : 0;
+		t++;
 	}
 	return 0;
 }

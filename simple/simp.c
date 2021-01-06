@@ -1,17 +1,12 @@
 // Try this whole thing way differently
 #include "../zwalker.h"
 #include "../zhasher.h"
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
 #include "table.c"
-
-#define XMAP_DUMP_LEN 3
 
 #define zr_add_item(LIST,ELEMENT,SIZE,LEN) \
  add_item_to_list( (void ***)LIST, ELEMENT, sizeof( SIZE ), LEN )
 
-enum /* xMark */ {
+enum {
 	RW = 0,
 	SX = 32,
 	BL = 33,
@@ -60,9 +55,11 @@ typedef struct zRender {
 
 
 #ifdef DEBUG_H
+ #define XMAP_DUMP_LEN 3
  void print_premap ( struct premap ** );
  void print_xmap ( struct xmap ** );
 #else
+ #define XMAP_DUMP_LEN
  #define print_xmap(...)
  #define print_premap(...)
 #endif
@@ -195,6 +192,12 @@ static void extract_value ( zRender *rz, int hash, struct xmap *xp ) {
 }
 
 
+//Set specific error strings
+static void zr_set_strerror ( short error ) {
+	//can probably use some snprintf magic to make this work
+}
+
+
 //Initialize the object
 zRender * zrender_init() {
 	zRender *zr = malloc( sizeof( zRender ) );
@@ -223,15 +226,15 @@ void zrender_set_boundaries ( zRender *rz, const char *s, const char *end ) {
 
 
 //...
-void zrender_set_strerror ( short error ) {
-	//can probably use some snprintf magic to make this work
+void zrender_set( zRender *rz, const char map, short code ) {
+	rz->xmapset[ (short)map ] = code;
 }
 
 
 
-//...
-void zrender_set( zRender *rz, const char map, short code ) {
-	rz->xmapset[ (short)map ] = code;
+//....
+const char * zrender_strerror( zRender *z ) {
+	return z->errmsg;
 }
 
 
@@ -452,7 +455,7 @@ unsigned char * zrender_interpret( zRender *rz, unsigned char **bb, int *llen ) 
 
 
 //Free all the stuffs
-void zrender_free2( zRender *rz ) {
+void zrender_free( zRender *rz ) {
 	free_premap( rz->premap );
 	free_xmap( rz->xmap );
 	free( (void *)rz->zStart );
@@ -526,6 +529,11 @@ void print_xmap ( struct xmap **p ) {
 
 
 #if 1
+
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
 //read file and path
 unsigned char *read_file ( const char *path ) {
 	unsigned char *buf = NULL;
@@ -574,7 +582,7 @@ int main (int argc, char *argv[]) {
 	write( 2, dest, dlen );	
 
 	free( dest );
-	zrender_free2( rz );
+	zrender_free( rz );
 	lt_free( t );
 	free( src );
 	return 0;
