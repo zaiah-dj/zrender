@@ -2,8 +2,6 @@
 NAME = zrender
 CC = clang
 CFLAGS = -Wall -Werror -std=c99 -Wno-unused
-#CC = gcc
-#CFLAGS = -Wall -Werror -Wno-unused #-DDEBUG_H 
 SRC = zhasher.c zwalker.c zrender.c
 
 main:
