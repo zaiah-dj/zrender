@@ -308,7 +308,12 @@ fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr-
 			else if ( xp->type == LE ) {
 				xp->len = 0, xp->ptr = NULL, xp->parent = xdptr, xdptr->index++;
 //fprintf( stderr, "LOOPEND(1): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
-				( xdptr->index == xdptr->children ) ? ( pmap += 1 ) : ( pmap = xdptr->cxmap );
+				if ( xdptr->index < xdptr->children ) 
+					pmap = xdptr->cxmap;
+				else {
+					xdptr->index = 0;
+					pmap++;
+				}
 //fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
 //getchar();
 				xdptr--;

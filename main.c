@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+
 #define SPACE_TEST "sister_cities"
 
 /*Max key searches*/
@@ -502,17 +503,19 @@ struct Test {
 
 struct Test tests[] = {
 	//Expected failure should also be listed here
+#if 0
 	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	{ NozTable, "TABLE_NONE", "Template values with no tables." },
+#endif
 	{ SinglezTable, "TABLE_SINGLE", "one level table" },
 #if 0
+	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
 	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	//{ NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input." },
 	{	SinglezTable, "TABLE_SINGLE_FAIL", "one level table with syntax failure" },
 #if 0
-	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
 	{	DoublezTableNumeric, "TABLE_TWO_LEVEL", "two level table | key value test" },
 	{	MultiLevelzTable, "TABLE_KV", "key and value" },
 #endif
