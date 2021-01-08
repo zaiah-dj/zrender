@@ -164,10 +164,12 @@ zKeyval DoublezTableAlpha[] = {
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
 			{ TEXT_KEY( "desc" ), BLOB_VALUE( "There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors." ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
-				{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "The Real Silicon Valley" ) },
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
+					{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "The Real Silicon Valley" ) },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TRM() },
 				{ TRM() },
 			{ TRM() },
 
@@ -176,9 +178,11 @@ zKeyval DoublezTableAlpha[] = {
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NY" ) },
 			{ TEXT_KEY( "desc" ), BLOB_VALUE( "New York City is one of the most well-known destinations on earth and home to over 8 million residents." ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "The Greatest City on Earth" ) },
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 8750000 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "The Greatest City on Earth" ) },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 8750000 ) },
+					{ TRM() },
 				{ TRM() },
 			{ TRM() },
 
@@ -187,9 +191,11 @@ zKeyval DoublezTableAlpha[] = {
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NC" ) },
 			{ TEXT_KEY( "desc" ), BLOB_VALUE( "Otherwise known as the Oak City, around 600,000 residents call Raleigh home." ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "Silicon Valley of the South" ) },
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 350001 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "claim_to_fame" ), TEXT_VALUE( "Silicon Valley of the South" ) },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 350001 ) },
+					{ TRM() },
 				{ TRM() },
 			{ TRM() },
 		{ TRM() },
@@ -251,6 +257,7 @@ zKeyval DoublezTableNumeric[] = {
 };
 
 
+
 zKeyval MultiLevelzTable[] = {
 	{ TEXT_KEY( "cities" )       , TABLE_VALUE( )         },
 		/*Database records look a lot like this*/
@@ -258,22 +265,21 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "San Francisco" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
-				{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
-#if 0
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 5.5 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 40.5 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 35.4 ) },
-					{ TEXT_KEY( "Hispanic" ), INT_VALUE( 15.2 ) },
-#else
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 5 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 40 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 35 ) },
-					{ TEXT_KEY( "Hispanic" ), INT_VALUE( 15 ) },
-#endif
-					{ TEXT_KEY( "Other" ),    INT_VALUE( 20 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TEXT_KEY( "landmarks" ), TABLE_VALUE( )         },
+						{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Golden Gate	Bridge" ) },
+							{ TEXT_KEY( "long" ),  TEXT_VALUE( "37.820106557807"  ) },
+							{ TEXT_KEY( "lat" ),  TEXT_VALUE( "-122.47828728867952" ) },
+							{ TRM() },
+						{ INT_KEY( 1 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Alcatraz Island" ) },
+							{ TEXT_KEY( "long" ),  TEXT_VALUE( "37.8272536122546"  ) },
+							{ TEXT_KEY( "lat" ),  TEXT_VALUE( "-122.42296734450015" ) },
+							{ TRM() },
+						{ TRM() },
 					{ TRM() },
 				{ TRM() },
 			{ TRM() },
@@ -282,20 +288,31 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "New York" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NY" ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 19750000 ) },
-				{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
-#if 0
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 17.7 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 55.8 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 8.9 ) },
-#else
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 17 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 55 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 8 ) },
-#endif
-					{ TEXT_KEY( "Hispanic" ), INT_VALUE( 19 ) },
-					{ TEXT_KEY( "Other" ),    INT_VALUE( 13 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 19750000 ) },
+					{ TEXT_KEY( "landmarks" ), TABLE_VALUE( )         },
+						{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Statue of Liberty National Monument" ) },
+							{ TEXT_KEY( "long" ),    TEXT_VALUE( "40.68941208336438" ) },
+							{ TEXT_KEY( "lat" ),    TEXT_VALUE( "-74.04453258859414" ) },
+							{ TRM() },
+						{ INT_KEY( 1 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Museum of Modern Art" ) },
+							{ TEXT_KEY( "long" ),    TEXT_VALUE( "40.761595206982896"  ) },
+							{ TEXT_KEY( "lat" ),    TEXT_VALUE( "-73.97758941557696" ) },
+							{ TRM() },
+						{ INT_KEY( 2 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Brooklyn Bridge" ) },
+							{ TEXT_KEY( "long" ),    TEXT_VALUE( "40.70655756655535" ) },
+							{ TEXT_KEY( "lat" ),    TEXT_VALUE( "-73.996724576758" ) },
+							{ TRM() },
+						{ INT_KEY( 3 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),    TEXT_VALUE( "" ) },
+							{ TEXT_KEY( "long" ),    TEXT_VALUE( "40.74863555058537"  ) },
+							{ TEXT_KEY( "lat" ),    TEXT_VALUE( "-73.98563221557743" ) },
+							{ TRM() },
+						{ TRM() },
 					{ TRM() },
 				{ TRM() },
 			{ TRM() },
@@ -304,27 +321,92 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "Raleigh" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NC" ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
-				{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-				{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
-				{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
-#if 0
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 28.4 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 57.74 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 4.69 ) },
-					{ TEXT_KEY( "Hispanic" ), INT_VALUE( 11.81 ) },
-#else
-					{ TEXT_KEY( "Black" ),    INT_VALUE( 28 ) },
-					{ TEXT_KEY( "White" ),    INT_VALUE( 57 ) },
-					{ TEXT_KEY( "Asian" ),    INT_VALUE( 4 ) },
-					{ TEXT_KEY( "Hispanic" ), INT_VALUE( 11 ) },
-#endif
-					{ TEXT_KEY( "Other" ),    INT_VALUE( 9 ) },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TEXT_KEY( "landmarks" ), TABLE_VALUE( )         },
+						{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+							{ TEXT_KEY( "name" ),  TEXT_VALUE( "North Carolina Museum of Art" ) },
+							{ TEXT_KEY( "long" ),  TEXT_VALUE( "35.8103090163288" ) },
+							{ TEXT_KEY( "lat" ),  TEXT_VALUE( "-78.70240260185079" ) },
+							{ TRM() },
+						{ TRM() },
 					{ TRM() },
 				{ TRM() },
 			{ TRM() },
 		{ TRM() },
 	{ LKV_LAST } 
 };
+
+
+#if 0
+zKeyval MultiLevelKeyValTable[] = {
+	{ TEXT_KEY( "cities" )       , TABLE_VALUE( )         },
+		/*Database records look a lot like this*/
+		{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+			{ TEXT_KEY( "city" ), BLOB_VALUE( "San Francisco" ) },
+			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
+			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
+					{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+						{ TEXT_KEY( "Black" ),    INT_VALUE( 5 ) },
+						{ TEXT_KEY( "White" ),    INT_VALUE( 40 ) },
+						{ TEXT_KEY( "Asian" ),    INT_VALUE( 35 ) },
+						{ TEXT_KEY( "Hispanic" ), INT_VALUE( 15 ) },
+						{ TEXT_KEY( "Other" ),    INT_VALUE( 20 ) },
+						{ TRM() },
+					{ TRM() },
+				{ TRM() },
+			{ TRM() },
+		{ TRM() },
+
+		{ INT_KEY( 1 )       , TABLE_VALUE( )         },
+			{ TEXT_KEY( "city" ), BLOB_VALUE( "New York" ) },
+			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NY" ) },
+			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 19750000 ) },
+					{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
+					{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+						{ TEXT_KEY( "Black" ),    INT_VALUE( 17 ) },
+						{ TEXT_KEY( "White" ),    INT_VALUE( 55 ) },
+						{ TEXT_KEY( "Asian" ),    INT_VALUE( 8 ) },
+						{ TEXT_KEY( "Hispanic" ), INT_VALUE( 19 ) },
+						{ TEXT_KEY( "Other" ),    INT_VALUE( 13 ) },
+						{ TRM() },
+					{ TRM() },
+				{ TRM() },
+			{ TRM() },
+		{ TRM() },
+
+		{ INT_KEY( 2 )       , TABLE_VALUE( )         },
+			{ TEXT_KEY( "city" ), BLOB_VALUE( "Raleigh" ) },
+			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "NC" ) },
+			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
+				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TEXT_KEY( "demographics" ), TABLE_VALUE( )         },
+					{ INT_KEY( 0 )       , TABLE_VALUE( )         },
+						{ TEXT_KEY( "Black" ),    INT_VALUE( 17 ) },
+						{ TEXT_KEY( "White" ),    INT_VALUE( 55 ) },
+						{ TEXT_KEY( "Asian" ),    INT_VALUE( 8 ) },
+						{ TEXT_KEY( "Hispanic" ), INT_VALUE( 19 ) },
+						{ TEXT_KEY( "Other" ),    INT_VALUE( 13 ) },
+						{ TRM() },
+					{ TRM() },
+				{ TRM() },
+			{ TRM() },
+		{ TRM() },
+		{ TRM() },
+	{ LKV_LAST } 
+};
+#endif
 
 
 #if 0
@@ -507,10 +589,11 @@ struct Test tests[] = {
 	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	{ NozTable, "TABLE_NONE", "Template values with no tables." },
-#endif
 	{ SinglezTable, "TABLE_SINGLE", "one level table" },
-#if 0
 	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
+#endif
+	{ MultiLevelzTable, "TABLE_TRIPLE", "three level table | key value test" },
+#if 0
 	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	//{ NozTable, "TABLE_NONE_RWFAIL", "Template values with no tables, <style> tag at the top and bad input." },
@@ -570,6 +653,7 @@ int main (int argc, char *argv[]) {
 
 	while ( t->kvset ) {
 		zTable *tt = convert_lkv( t->kvset );
+#if 0
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, tt );
@@ -617,6 +701,9 @@ int main (int argc, char *argv[]) {
 		free( tt );
 		free( (void *)t->src );
 		( t->cmp ) ? free( (void *)t->cmp ) : 0;
+#endif
+		lt_dump( tt );
+lt_free( tt ); free( tt );
 		t++;
 	}
 	return 0;

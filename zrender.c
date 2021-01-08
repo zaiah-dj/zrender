@@ -284,17 +284,29 @@ int zrender_convert_marks( zRender *rz ) {
 	
 			//LOOP START	
 			if ( ( xp->type = rz->xmapset[ *t ] ) == LS ) {
-				xp->len = --nlen; 
-				xp->ptr = ++t; 
+				//These are set so that we'll know which ref to look at
+				//This also needs only be done ONE time (the first time it's encountered)
+				xp->ptr = zr_trim( t, "# ", nlen, &nlen );
+				xp->len = nlen; 
 				xp->parent = xdptr;
+				if ( *xp->ptr != '.' )
+					hash = lt_get_long_i( rz->userdata, xp->ptr, xp->len );
+				else {
+					char *lookup = lookup_xmap( xp );
+					hash = lt_geti( rz->userdata, lookup );
+					free( lookup ); //rebuillding each time is going to get repetitive
+				}
 #if 0
-fprintf( stderr, "PARENT at first LS: %p\n", xp->parent );
+fprintf( stderr, "PARENT at first LS: %p, '", xp->parent );
+write( 2, xp->ptr, xp->len ); 
+write( 2, "'\n", 2 ); 
+getchar();
 #endif
-				if ( ( hash = lt_get_long_i( rz->userdata, xp->ptr, xp->len ) ) != -1 ) {
+				if ( hash != -1 ) {
 					//get the data at that point
 					xdptr++;
 					xdptr->children = lt_counti( rz->userdata, hash );
-					xdptr->index = !xdptr->index ? 0 : xdptr->index; 
+					//xdptr->index = !xdptr->index ? 0 : xdptr->index; 
 					xdptr->pxmap = xp;
 					xdptr->cxmap = pmap;
 #if 0
@@ -314,8 +326,7 @@ fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr-
 					xdptr->index = 0;
 					pmap++;
 				}
-//fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
-//getchar();
+//fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap ); getchar();
 				xdptr--;
 			}
 			else if ( xp->type == SX ) {
