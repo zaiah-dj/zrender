@@ -1,0 +1,141 @@
+<html>
+<head>
+</head>
+<body>
+
+	<h2>San Francisco</h2>
+	<p>
+		San Francisco, CA is a city containing X people.
+	</p>
+	<p>
+		
+	</p>
+	<table>
+		<thead>
+			<th>Skyline</th>
+			<th>Population</th>
+		</thead>
+		<tbody>
+		
+			<tr>
+				<td>Population: 870887</td>
+				<td>Claim to Fame: </td>
+			</tr>
+		
+		</tbody>
+	</table>
+	<table>
+		<thead>
+			<th>Name</th>
+			<th>Location</th>
+		</thead>
+		<tbody>
+		
+		
+			<tr>
+				<td>Golden Gate	Bridge</td>
+				<td><a href="googlemaps">-122.47828728867952, 37.820106557807</a></td>
+			</tr>
+		
+			<tr>
+				<td>Alcatraz Island</td>
+				<td><a href="googlemaps">-122.42296734450015, 37.8272536122546</a></td>
+			</tr>
+		
+		
+		</tbody>
+	</table>
+
+	<h2>New York</h2>
+	<p>
+		New York, NY is a city containing X people.
+	</p>
+	<p>
+		
+	</p>
+	<table>
+		<thead>
+			<th>Skyline</th>
+			<th>Population</th>
+		</thead>
+		<tbody>
+		
+			<tr>
+				<td>Population: 19750000</td>
+				<td>Claim to Fame: </td>
+			</tr>
+		
+		</tbody>
+	</table>
+	<table>
+		<thead>
+			<th>Name</th>
+			<th>Location</th>
+		</thead>
+		<tbody>
+		
+		
+			<tr>
+				<td>Statue of Liberty National Monument</td>
+				<td><a href="googlemaps">-74.04453258859414, 40.68941208336438</a></td>
+			</tr>
+		
+			<tr>
+				<td>Museum of Modern Art</td>
+				<td><a href="googlemaps">-73.97758941557696, 40.761595206982896</a></td>
+			</tr>
+		
+			<tr>
+				<td>Brooklyn Bridge</td>
+				<td><a href="googlemaps">-73.996724576758, 40.70655756655535</a></td>
+			</tr>
+		
+			<tr>
+				<td></td>
+				<td><a href="googlemaps">-73.98563221557743, 40.74863555058537</a></td>
+			</tr>
+		
+		
+		</tbody>
+	</table>
+
+	<h2>Raleigh</h2>
+	<p>
+		Raleigh, NC is a city containing X people.
+	</p>
+	<p>
+		
+	</p>
+	<table>
+		<thead>
+			<th>Skyline</th>
+			<th>Population</th>
+		</thead>
+		<tbody>
+		
+			<tr>
+				<td>Population: 870887</td>
+				<td>Claim to Fame: </td>
+			</tr>
+		
+		</tbody>
+	</table>
+	<table>
+		<thead>
+			<th>Name</th>
+			<th>Location</th>
+		</thead>
+		<tbody>
+		
+		
+			<tr>
+				<td>North Carolina Museum of Art</td>
+				<td><a href="googlemaps">-78.70240260185079, 35.8103090163288</a></td>
+			</tr>
+		
+		
+		</tbody>
+	</table>
+
+</body>
+</html>

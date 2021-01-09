@@ -653,7 +653,7 @@ int main (int argc, char *argv[]) {
 
 	while ( t->kvset ) {
 		zTable *tt = convert_lkv( t->kvset );
-#if 0
+#if 1
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, tt );
@@ -702,8 +702,7 @@ int main (int argc, char *argv[]) {
 		free( (void *)t->src );
 		( t->cmp ) ? free( (void *)t->cmp ) : 0;
 #endif
-		lt_dump( tt );
-lt_free( tt ); free( tt );
+		//lt_dump( tt );lt_free( tt ); free( tt );
 		t++;
 	}
 	return 0;

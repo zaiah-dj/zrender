@@ -117,8 +117,7 @@ static void free_xmap( struct xmap **map ) {
 //Hmm, this works for tables, but not for any other data structure....
 static void extract_value ( zRender *rz, int hash, struct xmap *xp ) {
 	zKeyval *lt = lt_retkv( rz->userdata, hash );
-//v v = lt->value;
-	if ( lt->value.type == LITE_TXT )
+	if ( lt->value.type == LITE_TXT && lt->value.v.vchar != NULL )
 		xp->len = strlen( lt->value.v.vchar ), xp->ptr = (unsigned char *)lt->value.v.vchar;
 	else if ( lt->value.type == LITE_BLB )
 		xp->len = lt->value.v.vblob.size, xp->ptr = lt->value.v.vblob.blob;
@@ -296,11 +295,10 @@ int zrender_convert_marks( zRender *rz ) {
 					hash = lt_geti( rz->userdata, lookup );
 					free( lookup ); //rebuillding each time is going to get repetitive
 				}
-#if 0
+#if 1
 fprintf( stderr, "PARENT at first LS: %p, '", xp->parent );
 write( 2, xp->ptr, xp->len ); 
 write( 2, "'\n", 2 ); 
-getchar();
 #endif
 				if ( hash != -1 ) {
 					//get the data at that point
@@ -309,7 +307,7 @@ getchar();
 					//xdptr->index = !xdptr->index ? 0 : xdptr->index; 
 					xdptr->pxmap = xp;
 					xdptr->cxmap = pmap;
-#if 0
+#if 1
 fprintf( stderr, "LOOPSTART: pmap: %p, %p\n", pmap, xdptr->cxmap ); 
 fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr->index ); 
 #endif
@@ -319,14 +317,14 @@ fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr-
 			//LOOP END
 			else if ( xp->type == LE ) {
 				xp->len = 0, xp->ptr = NULL, xp->parent = xdptr, xdptr->index++;
-//fprintf( stderr, "LOOPEND(1): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
+fprintf( stderr, "LOOPEND(1): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
 				if ( xdptr->index < xdptr->children ) 
 					pmap = xdptr->cxmap;
 				else {
 					xdptr->index = 0;
 					pmap++;
 				}
-//fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap ); getchar();
+fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap );
 				xdptr--;
 			}
 			else if ( xp->type == SX ) {
@@ -344,9 +342,10 @@ fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr-
 
 				//find the full lookup string
 				char *lookup = lookup_xmap( xp );
-
+				hash = lt_geti( rz->userdata, lookup );
+fprintf( stderr, "CX LOOKUP: %s (%d)\n", lookup, hash );
 				//then get the hash
-				if ( ( hash = lt_geti( rz->userdata, lookup ) ) == -1 ) 
+				if ( hash == -1 ) 
 					xp->len = 0, xp->ptr = NULL;
 				else {
 					extract_value( rz, hash, xp );
