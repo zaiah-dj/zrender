@@ -1,9 +1,68 @@
 /* ------------------------------------------------------- *
-zrender.c
-=========
-
-Enables zTables (and eventually other data structures in C)
-to be used in templating.
+ * zrender.c
+ * =========
+ * 
+ * Summary 
+ * -------
+ * Enables zTables (and eventually other data structures in C)
+ * to be used in templating.
+ *
+ *
+ * Usage
+ * -----
+ * Basic usage in a C program looks something like:
+ * <pre>
+ * unsigned char *buf = NULL;
+ * int buflen = 0;
+ * char *template = $generic_file_read_to_buffer( ... );
+ * 
+ * zRender *rz = zrender_init();
+ * zrender_set_default_dialect( rz );
+ * zrender_set_fetchdata( rz, tt );
+ * 
+ * if ( !(buf = zrender_render( rz, template, strlen( template ), &buflen )) ) {
+ * 	fprintf( stderr, "%s\n", zrender_strerror( rz ) );
+ * 	zrender_free( rz );
+ * 	return 1;
+ * }
+ * 
+ * write( 1, buf, buflen );
+ * zrender_free( rz );
+ * </pre>
+ *
+ * Changes made in the future will most likely be making it easier to
+ * define your own templating languages, and cutting down on the code
+ * needed to get rendering working.
+ *
+ *
+ * LICENSE
+ * -------
+ * Copyright 2020 Tubular Modular Inc. dba Collins Design
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
+ *
+ *
+ * CHANGELOG 
+ * ---------
+ * 01-08-21 - Rewrote entire mapping routine, takes more memory, but far
+ * simpler to reason about and less error prone.
+ *
  * ------------------------------------------------------- */
 #include "zrender.h"
 
@@ -295,7 +354,7 @@ int zrender_convert_marks( zRender *rz ) {
 					hash = lt_geti( rz->userdata, lookup );
 					free( lookup ); //rebuillding each time is going to get repetitive
 				}
-#if 1
+#if 0
 fprintf( stderr, "PARENT at first LS: %p, '", xp->parent );
 write( 2, xp->ptr, xp->len ); 
 write( 2, "'\n", 2 ); 
@@ -307,7 +366,7 @@ write( 2, "'\n", 2 );
 					//xdptr->index = !xdptr->index ? 0 : xdptr->index; 
 					xdptr->pxmap = xp;
 					xdptr->cxmap = pmap;
-#if 1
+#if 0
 fprintf( stderr, "LOOPSTART: pmap: %p, %p\n", pmap, xdptr->cxmap ); 
 fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr->index ); 
 #endif
@@ -317,14 +376,18 @@ fprintf( stderr, "LOOPSTART: children: %d, index: %d\n", xdptr->children, xdptr-
 			//LOOP END
 			else if ( xp->type == LE ) {
 				xp->len = 0, xp->ptr = NULL, xp->parent = xdptr, xdptr->index++;
+#if 0
 fprintf( stderr, "LOOPEND(1): pmap: %p, %p\n", pmap, xdptr->cxmap ); 
+#endif
 				if ( xdptr->index < xdptr->children ) 
 					pmap = xdptr->cxmap;
 				else {
 					xdptr->index = 0;
 					pmap++;
 				}
+#if 0
 fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap );
+#endif
 				xdptr--;
 			}
 			else if ( xp->type == SX ) {
@@ -343,7 +406,9 @@ fprintf( stderr, "LOOPEND(2): pmap: %p, %p\n", pmap, xdptr->cxmap );
 				//find the full lookup string
 				char *lookup = lookup_xmap( xp );
 				hash = lt_geti( rz->userdata, lookup );
+#if 0
 fprintf( stderr, "CX LOOKUP: %s (%d)\n", lookup, hash );
+#endif
 				//then get the hash
 				if ( hash == -1 ) 
 					xp->len = 0, xp->ptr = NULL;
