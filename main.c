@@ -589,9 +589,9 @@ struct Test tests[] = {
 	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	{ NozTable, "TABLE_NONE", "Template values with no tables." },
+#endif
 	{ SinglezTable, "TABLE_SINGLE", "one level table" },
 	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
-#endif
 	{ MultiLevelzTable, "TABLE_TRIPLE", "three level table | key value test" },
 #if 0
 	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
