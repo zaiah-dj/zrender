@@ -15,49 +15,49 @@
 	.hash = { LKV_TERM }
 
 #define TEXT_KEY( str ) \
-	.key = { LITE_TXT, .v.vchar = str } 
+	.key = { ZTABLE_TXT, .v.vchar = str } 
 
 #define TEXT_VALUE( str ) \
-	.value = { LITE_TXT, .v.vchar = str }
+	.value = { ZTABLE_TXT, .v.vchar = str }
 
 #define BLOB_KEY( b ) \
-	.key = { LITE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
+	.key = { ZTABLE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
 
 #define BLOB_VALUE( b ) \
-	.value = { LITE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
+	.value = { ZTABLE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
 
 #define INT_KEY( b ) \
-	.key = { LITE_INT, .v.vint = b } 
+	.key = { ZTABLE_INT, .v.vint = b } 
 
 #define INT_VALUE( b ) \
-	.value = { LITE_INT, .v.vint = b } 
+	.value = { ZTABLE_INT, .v.vint = b } 
 
 #define FLOAT_VALUE( b ) \
-	.value = { LITE_FLT, .v.vfloat = b } 
+	.value = { ZTABLE_FLT, .v.vfloat = b } 
 
 #define USR_VALUE( b ) \
-	.value = { LITE_USR, .v.vusrdata = b } 
+	.value = { ZTABLE_USR, .v.vusrdata = b } 
 
 #define TABLE_VALUE( b ) \
-	.value = { LITE_TBL }
+	.value = { ZTABLE_TBL }
 
 #define NULL_VALUE( ) \
-	.value = { LITE_NUL }
+	.value = { ZTABLE_NUL }
 
 #define TRM_VALUE( ) \
-	.value = { LITE_TRM }
+	.value = { ZTABLE_TRM }
 
 #define TRM( ) \
-	.key = { LITE_TRM }
+	.key = { ZTABLE_TRM }
 
 #define START_TABLEs( str ) \
-	.key = { LITE_TXT, .v.vchar = str }, .value = { LITE_TBL }
+	.key = { ZTABLE_TXT, .v.vchar = str }, .value = { ZTABLE_TBL }
 
 #define START_TABLEi( num ) \
-	.key = { LITE_INT, .v.vint = num }, .value = { LITE_TBL }
+	.key = { ZTABLE_INT, .v.vint = num }, .value = { ZTABLE_TBL }
 
 #define END_TABLE() \
-	.key = { LITE_TRM }
+	.key = { ZTABLE_TRM }
 #if 0
 struct block { const char *model, *view; } files[] = {
 	{ TESTDIR "empty.lua", TESTDIR "empty.tpl" },
@@ -518,13 +518,13 @@ zTable *convert_lkv ( zKeyval *kv ) {
 	lt_init( t, NULL, get_count( kv ) );
 
 	while ( *kv->hash != LKV_TERM ) {
-		if ( kv->key.type == LITE_TXT )
+		if ( kv->key.type == ZTABLE_TXT )
 			lt_addtextkey( t, kv->key.v.vchar );
-		else if ( kv->key.type == LITE_BLB )
+		else if ( kv->key.type == ZTABLE_BLB )
 			lt_addblobkey( t, kv->key.v.vblob.blob, kv->key.v.vblob.size );
-		else if ( kv->key.type == LITE_INT )
+		else if ( kv->key.type == ZTABLE_INT )
 			lt_addintkey( t, kv->key.v.vint );
-		else if ( kv->key.type == LITE_TRM ) {
+		else if ( kv->key.type == ZTABLE_TRM ) {
 			lt_ascend( t );
 			kv ++;
 			continue;
@@ -535,27 +535,27 @@ zTable *convert_lkv ( zKeyval *kv ) {
 			exit( 0 );	
 		}
 
-		if ( kv->value.type == LITE_TXT )
+		if ( kv->value.type == ZTABLE_TXT )
 			lt_addtextvalue( t, kv->value.v.vchar );
-		else if ( kv->value.type == LITE_BLB )
+		else if ( kv->value.type == ZTABLE_BLB )
 			lt_addblobvalue( t, kv->value.v.vblob.blob, kv->value.v.vblob.size );
-		else if ( kv->value.type == LITE_INT )
+		else if ( kv->value.type == ZTABLE_INT )
 			lt_addintvalue( t, kv->value.v.vint );
-		else if ( kv->value.type == LITE_FLT )
+		else if ( kv->value.type == ZTABLE_FLT )
 			lt_addfloatvalue( t, kv->value.v.vfloat );
-		else if ( kv->value.type == LITE_USR )
+		else if ( kv->value.type == ZTABLE_USR )
 			lt_addudvalue( t, kv->value.v.vusrdata );
-		else if ( kv->value.type == LITE_NUL )
+		else if ( kv->value.type == ZTABLE_NUL )
 			;//lt_ascend has already been called, thus we should never reach this
 		else { 
-			if ( kv->value.type != LITE_TBL ) {
+			if ( kv->value.type != ZTABLE_TBL ) {
 				//Abort immediately b/c this is an error
 				fprintf( stderr, "%s: %d -  Got unknown or invalid key type!  Bailing!", __FILE__, __LINE__ );
 				return NULL;
 			}
 		}
 
-		if ( kv->value.type != LITE_TBL )
+		if ( kv->value.type != ZTABLE_TBL )
 			lt_finalize( t );
 		else {
 			lt_descend( t );
@@ -663,11 +663,13 @@ int main (int argc, char *argv[]) {
 		t->cmp = read_file( t->name, "tests/cmp" );
 		write_unsigned( (unsigned char *)t->src, strlen( t->src ) );
 
-	#if 0
+	#if 1
 		//This performs a one-shot templating function 
-		if ( !( r = zrender_render( rz, (unsigned char *)t->src, strlen(t->src), &rlen ) ) ) {
+		if ( !( t->dest = zrender_render( rz, (unsigned char *)t->src, strlen(t->src), &t->dlen ) ) )
 			fprintf(stderr, "Error rendering template at item: %s\n", t->name );
-			goto destroy_zr;
+		else {	
+			//Dump the message
+			write_unsigned( t->dest, t->dlen );
 		}
 	#else
 		//These ought to be seperated out
@@ -682,10 +684,10 @@ int main (int argc, char *argv[]) {
 		if ( !zrender_interpret( rz, &t->dest, &t->dlen ) ) {
 			fprintf( stderr, "interpret failed\n" ); return 1;
 		}
-	#endif
 
 		//Dump the message
 		write_unsigned( t->dest, t->dlen );
+	#endif
 
 	#if 0
 		if ( t->cmp ) {

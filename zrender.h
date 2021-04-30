@@ -42,7 +42,7 @@
  *
  * ------------------------------------------------------- */
 #include "zwalker.h"
-#include "zhasher.h"
+#include "ztable.h"
 
 #ifndef ZRENDER_H
 #define ZRENDER_H
@@ -80,9 +80,9 @@ struct xdesc {
 
 struct xmap {
 	unsigned char *ptr;
-	short len;
-	short type;
 	struct xdesc *parent;
+	char len;
+	char type;
 };
 
 typedef struct zRender {
@@ -110,11 +110,13 @@ const char * zrender_strerror( zRender * );
 
 void zrender_set_default_dialect( zRender * );
 
-int zrender_set_marks( zRender *, unsigned char *, unsigned int );
+int zrender_set_marks( zRender *, const unsigned char *, unsigned int );
 
 int zrender_convert_marks( zRender *);
 
 unsigned char * zrender_interpret( zRender *, unsigned char **, int * );
+
+unsigned char * zrender_render( zRender *, const unsigned char *, int, int * );
 
 void zrender_free( zRender *);
 

@@ -2,7 +2,7 @@
 NAME = zrender
 CC = clang
 CFLAGS = -Wall -Werror -std=c99 -Wno-unused
-SRC = zhasher.c zwalker.c zrender.c
+SRC = ztable.c zwalker.c zrender.c
 
 main:
 	$(CC) $(CFLAGS) -o $(NAME)-test $(SRC) main.c
