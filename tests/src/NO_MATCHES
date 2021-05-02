@@ -2,7 +2,12 @@
 <body>
 	<h2>Yuna</h2>
 	<p>
-		Bacon	
-	</p>	
+		Bacon	{{ boss }}
+	</p>
+	<ul>
+		{{ #items }}
+			<li>You should never see me</li>
+		{{ /items }}
+	</ul>
 </body>
 </html>

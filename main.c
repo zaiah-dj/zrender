@@ -3,6 +3,16 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#define HELP "\
+-p, --pause          Pause after each test run. \n\
+-e, --exit           Exit on first failure. \n\
+-d, --dump           Dump name of the test. \n\
+-v, --verbose        Dump the contents of the test files. \n\
+-t, --test <arg>     Only run this specific test (use multiple -t's for additional tests). \n\
+-c, --compact        Show only name of the test and whether or not it failed. \n\
+-h, --help           Show help and quit. \n\
+"
+
 #define SPACE_TEST "sister_cities"
 
 /*Max key searches*/
@@ -579,20 +589,20 @@ struct Test {
 	const char *name, *desc;
 	const char *src, *cmp;
 	unsigned char *dest;
-	int dlen;
+	int dlen, clen;
 };
 
 
 struct Test tests[] = {
 	//Expected failure should also be listed here
-#if 0
 	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
+#if 0
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	{ NozTable, "TABLE_NONE", "Template values with no tables." },
-#endif
 	{ SinglezTable, "TABLE_SINGLE", "one level table" },
 	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
 	{ MultiLevelzTable, "TABLE_TRIPLE", "three level table | key value test" },
+#endif
 #if 0
 	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
@@ -640,13 +650,51 @@ static void write_unsigned ( unsigned char *msg, int msglen ) {
 
 
 int main (int argc, char *argv[]) {
-#if 0
-	//Need to add options
+	int pause = 0;
+	int verbose = 0;
+	int compact = 1;
+	int exitf = 0;
+	int testslen = 0;
+	char *cli_test_array[ 256 ] = { NULL };
+	char **cli_tests = cli_test_array;
 
-	-v, --verbose    Dump the src and cmp
-	-c, --compact    Leave everything in one line (default)
-		(e.g. $TEST_NAME = SUCCESS (maybe add time) )
-#endif
+	while ( *argv ) {
+		if ( !strcmp( *argv, "-p" ) || !strcmp( *argv, "--pause" ) )
+			pause = 1;
+		else if ( !strcmp( *argv, "-e" ) || !strcmp( *argv, "--exit" ) )
+			exitf = 1;
+		else if ( !strcmp( *argv, "-v" ) || !strcmp( *argv, "--verbose" ) ) 
+			verbose = 1;
+		else if ( !strcmp( *argv, "-c" ) || !strcmp( *argv, "--compact" ) ) 
+			compact = 1;
+		else if ( !strcmp( *argv, "-h" ) || !strcmp( *argv, "--help" ) ) {
+			fprintf( stderr, "%s", HELP );	
+			return 0;
+		}
+		else if ( !strcmp( *argv, "-t" ) || !strcmp( *argv, "--test" ) ) {
+			*cli_tests = *( ++argv ), cli_tests++;
+		}
+		argv++;
+	}
+
+	#if 1
+	//Check that each test corresponds to a test name
+	for ( int i = 0; i<sizeof(cli_test_array) / sizeof(char *) && cli_test_array[i]; i++ ) {
+		fprintf( stderr, "%s\n", cli_test_array[ i ] );
+		struct Test *tt = tests;
+		int is_test = 0;
+		for ( ; tt->kvset; tt++ ) {
+			if ( strcmp( tt->name, cli_test_array[ i ] ) == 0 ) {
+				is_test = 1;
+				break;
+			}
+		}
+		if ( !is_test ) {
+			fprintf( stderr, "Requested test case '%s' not found.\n", cli_test_array[ i ] );
+			return 1;
+		}
+	}
+	#endif
 
 	//....
 	struct Test *t = tests;
@@ -657,11 +705,23 @@ int main (int argc, char *argv[]) {
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, tt );
+		
+		//Reset user specified tests
+		char **ustests = cli_test_array;
 
 		//Load both t files
 		t->src = read_file( t->name, "tests/src" ); 
 		t->cmp = read_file( t->name, "tests/cmp" );
-		write_unsigned( (unsigned char *)t->src, strlen( t->src ) );
+		t->clen = strlen( t->cmp );
+
+		//Dump
+		fprintf( stderr, "%-40s:", t->name );
+		
+		//Dump
+		if ( verbose ) {
+			fprintf( stderr, "\n" );
+			write_unsigned( (unsigned char *)t->src, strlen( t->src ) );
+		}
 
 	#if 1
 		//This performs a one-shot templating function 
@@ -669,7 +729,7 @@ int main (int argc, char *argv[]) {
 			fprintf(stderr, "Error rendering template at item: %s\n", t->name );
 		else {	
 			//Dump the message
-			write_unsigned( t->dest, t->dlen );
+			( verbose ) ? write_unsigned( t->dest, t->dlen ) : 0;
 		}
 	#else
 		//These ought to be seperated out
@@ -689,12 +749,24 @@ int main (int argc, char *argv[]) {
 		write_unsigned( t->dest, t->dlen );
 	#endif
 
-	#if 0
 		if ( t->cmp ) {
-			fprintf( stderr, "%s\n", 
-				memcmp( t->dest, t->cmp, t->dlen ) ? "FAILED" : "SUCCESS" );
+			if ( t->dlen != t->clen || memcmp( t->dest, t->cmp, t->dlen ) != 0 ) {
+				( verbose ) ? fprintf( stderr, "TEST '%s' ", t->name ) : 0;
+				fprintf( stderr, "%s\n", "FAILED" );
+				if ( verbose ) {
+					fprintf( stderr, "EXPECTED:\n" );
+					fprintf( stderr, "LEN: %d, LEN2: %d, MEMCMP: %d\n", t->dlen, t->clen, 
+						memcmp( t->dest, t->cmp, t->dlen ) ); 
+					write_unsigned( (unsigned char *)t->cmp, t->clen );
+				}	
+				if ( exitf ) {
+					return 1;
+				}
+			}
+			else {
+				fprintf( stderr, "%s\n", "SUCCEEDED" );
+			}
 		}
-	#endif
 
 		//Destroy everything...
 		free( t->dest );
@@ -703,8 +775,11 @@ int main (int argc, char *argv[]) {
 		free( tt );
 		free( (void *)t->src );
 		( t->cmp ) ? free( (void *)t->cmp ) : 0;
+		if ( pause ) {
+			fprintf( stderr, "Press [Enter] to continue...\n" );
+			getchar();
+		}
 #endif
-		//lt_dump( tt );lt_free( tt ); free( tt );
 		t++;
 	}
 	return 0;

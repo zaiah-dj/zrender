@@ -83,6 +83,7 @@ struct xmap {
 	struct xdesc *parent;
 	char len;
 	char type;
+	char free;
 };
 
 typedef struct zRender {

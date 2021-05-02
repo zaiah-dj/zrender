@@ -5,7 +5,7 @@
 {{# cities }}
 	<h2>{{ .city }}</h2>
 	<p>
-		{{ .city }}, {{ .parent_state }} is a city containing X people.
+		{{ .city }}, {{ .parent_state }} is a city containing {{ .metadata.0.population }} people.
 	</p>
 	<p>
 		{{ .desc }}

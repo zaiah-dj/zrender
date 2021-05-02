@@ -183,6 +183,9 @@ static void free_premap( struct premap **premap ) {
 static void free_xmap( struct xmap **map ) {
 	struct xmap **p = map;
 	while ( p && *p ) {
+		if ( (*p)->free ) {
+			free( (*p)->ptr );
+		}
 		free( *p );
 		p++;
 	}
@@ -196,15 +199,17 @@ static void extract_value ( zRender *rz, int hash, struct xmap *xp ) {
 	if ( lt->value.type == ZTABLE_TXT && lt->value.v.vchar != NULL )
 		xp->len = strlen( lt->value.v.vchar ), xp->ptr = (unsigned char *)lt->value.v.vchar;
 	else if ( lt->value.type == ZTABLE_BLB )
-		xp->len = lt->value.v.vblob.size, xp->ptr = lt->value.v.vblob.blob;
+		xp->len = lt->value.v.vblob.size, xp->ptr = lt->value.v.vblob.blob, xp->free = 0;
 	else if ( lt->value.type == ZTABLE_INT ) {
 		char intptr[32] = {0}; 
-		xp->len = snprintf( intptr, sizeof(intptr), "%d", lt->value.v.vint ); 
+		xp->len = snprintf( intptr, sizeof( intptr ), "%d", lt->value.v.vint ); 
 		xp->ptr = (unsigned char *)strdup( intptr );
+		xp->free = 1;
 	}
 	else {
 		xp->ptr = (unsigned char *)"";
-		xp->len = 0; 
+		xp->len = 0;
+		xp->free = 0; 
 	}
 }
 
@@ -384,7 +389,6 @@ int zrender_convert_marks( zRender *rz ) {
 		}
 		else if ( xp->type == LS ) {
 			xp->ptr = zr_trim( t, "# ", nlen, &nlen ), xp->parent = xdptr, xp->len = nlen; 
-
 			if ( *xp->ptr != '.' )
 				hash = lt_get_long_i( rz->userdata, xp->ptr, xp->len );
 			else {
@@ -488,8 +492,6 @@ unsigned char * zrender_render
 		fprintf( stderr, "set_marks failed\n" ); 
 		return NULL;
 	}
-
-	print_premap( rz->premap );
 
 	if ( !zrender_convert_marks( rz ) ) {
 		fprintf( stderr, "convert_marks failed\n" ); 
