@@ -2,9 +2,11 @@
 <head>
 </head>
 <body>
-{{ #artillery }}	<h2>{{ .rec }}</h2>
+{{ #artillery }}
+	<h2>{{ .rec }}</h2>
 	<p>
-		{{ mickey }} {{ .val }}
+		{{ .val }}
 	</p>
-{{ /artillery }}</body>
+{{ /artillery }}
+</body>
 </html>

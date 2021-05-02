@@ -5,7 +5,7 @@
 
 	<h2>San Francisco</h2>
 	<p>
-		San Francisco, CA is a city containing X people.
+		San Francisco, CA is a city containing 870887 people.
 	</p>
 	<p>
 		
@@ -48,7 +48,7 @@
 
 	<h2>New York</h2>
 	<p>
-		New York, NY is a city containing X people.
+		New York, NY is a city containing 8750000 people.
 	</p>
 	<p>
 		
@@ -61,7 +61,7 @@
 		<tbody>
 		
 			<tr>
-				<td>Population: 19750000</td>
+				<td>Population: 8750000</td>
 				<td>Claim to Fame: </td>
 			</tr>
 		
@@ -101,7 +101,7 @@
 
 	<h2>Raleigh</h2>
 	<p>
-		Raleigh, NC is a city containing X people.
+		Raleigh, NC is a city containing 350001 people.
 	</p>
 	<p>
 		
@@ -114,7 +114,7 @@
 		<tbody>
 		
 			<tr>
-				<td>Population: 870887</td>
+				<td>Population: 350001</td>
 				<td>Claim to Fame: </td>
 			</tr>
 		

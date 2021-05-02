@@ -80,7 +80,10 @@ static char * lookup_xmap ( struct xmap *xp, char *xb, int xblen ) {
 	//Move backwards among parents until we reach the top
 	while ( tp->pxmap ) {
 		struct parent *x = &parents[ px ];
-		x->c = (char *)(tp->pxmap)->ptr, x->l = (tp->pxmap)->len, x->i = tp->index, px++;
+		x->c = (char *)(tp->pxmap)->ptr; 
+		x->l = (tp->pxmap)->len; 
+		x->i = tp->index; 
+		px++;
 		tp = (tp->pxmap)->parent;
 	}
 
@@ -196,10 +199,15 @@ static void free_xmap( struct xmap **map ) {
 //Hmm, this works for tables, but not for any other data structure....
 static void extract_value ( zRender *rz, int hash, struct xmap *xp ) {
 	zKeyval *lt = lt_retkv( rz->userdata, hash );
-	if ( lt->value.type == ZTABLE_TXT && lt->value.v.vchar != NULL )
-		xp->len = strlen( lt->value.v.vchar ), xp->ptr = (unsigned char *)lt->value.v.vchar;
-	else if ( lt->value.type == ZTABLE_BLB )
-		xp->len = lt->value.v.vblob.size, xp->ptr = lt->value.v.vblob.blob, xp->free = 0;
+	if ( lt->value.type == ZTABLE_TXT && lt->value.v.vchar != NULL ) {
+		xp->len = strlen( lt->value.v.vchar ); 
+		xp->ptr = (unsigned char *)lt->value.v.vchar;
+	}
+	else if ( lt->value.type == ZTABLE_BLB ) {
+		xp->len = lt->value.v.vblob.size; 
+		xp->ptr = lt->value.v.vblob.blob; 
+		xp->free = 0;
+	}
 	else if ( lt->value.type == ZTABLE_INT ) {
 		char intptr[32] = {0}; 
 		xp->len = snprintf( intptr, sizeof( intptr ), "%d", lt->value.v.vint ); 
@@ -424,6 +432,7 @@ int zrender_convert_marks( zRender *rz ) {
 				extract_value( rz, hash, xp );
 				xp->parent = xdptr;
 			}
+
 			pmap++;
 		}
 #if 0
@@ -564,9 +573,10 @@ void print_premap ( struct premap **p ) {
 void print_xmap ( struct xmap **p ) {
 	while ( p && *p ) {
 		fprintf( stderr, "%p => ", *p );
-		fprintf( stderr, "%-10s, ", print_xmap_type( (*p)->type ) );
-		fprintf( stderr, "%3d, ", (*p)->len );
-		fprintf( stderr, "%-15p, ", (*p)->parent );
+		fprintf( stderr, "type: %-10s, ", print_xmap_type( (*p)->type ) );
+		fprintf( stderr, "len : %4d, ", (*p)->len );
+		fprintf( stderr, "par: %-15p, ", (*p)->parent );
+		fprintf( stderr, "con: " );
 		write( 2, (*p)->ptr, (*p)->len < XMAP_DUMP_LEN ? (*p)->len : XMAP_DUMP_LEN );
 		write( 2, "...\n", 4 );
 		if ( (*p)->parent ) {

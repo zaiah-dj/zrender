@@ -81,9 +81,8 @@ struct xdesc {
 struct xmap {
 	unsigned char *ptr;
 	struct xdesc *parent;
-	char len;
-	char type;
-	char free;
+	int len;
+	char type, free;
 };
 
 typedef struct zRender {
@@ -123,7 +122,7 @@ void zrender_free( zRender *);
 
 
 #ifdef DEBUG_H
- #define XMAP_DUMP_LEN 3
+ #define XMAP_DUMP_LEN 20 
  void print_premap ( struct premap ** );
  void print_xmap ( struct xmap ** );
  const char * print_xmap_type ( short );

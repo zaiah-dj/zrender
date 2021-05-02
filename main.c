@@ -34,7 +34,7 @@
 	.key = { ZTABLE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
 
 #define BLOB_VALUE( b ) \
-	.value = { ZTABLE_BLB, .v.vblob = { sizeof( b ), (unsigned char *)b }}
+	.value = { ZTABLE_BLB, .v.vblob = { strlen( (char *)b ), (unsigned char *)b }}
 
 #define INT_KEY( b ) \
 	.key = { ZTABLE_INT, .v.vint = b } 
@@ -172,7 +172,7 @@ zKeyval DoublezTableAlpha[] = {
 		{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 			{ TEXT_KEY( "city" ), BLOB_VALUE( "San Francisco" ) },
 			{ TEXT_KEY( "parent_state" ), TEXT_VALUE( "CA" ) },
-			{ TEXT_KEY( "desc" ), BLOB_VALUE( "There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or super-educated University of Berkeley professors." ) },
+			{ TEXT_KEY( "desc" ), BLOB_VALUE( "There are so many things to see and do in this wonderful town.  Like talk to a billionaire startup founder or highly educated University of Berkeley professors." ) },
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
 				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 					//Pay attention to this, I'd like to embed unsigned char data here (I think Lua can handle this)
@@ -300,7 +300,7 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
 				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-					{ TEXT_KEY( "population" ), INT_VALUE( 19750000 ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 8750000 ) },
 					{ TEXT_KEY( "landmarks" ), TABLE_VALUE( )         },
 						{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 							{ TEXT_KEY( "name" ),    TEXT_VALUE( "Statue of Liberty National Monument" ) },
@@ -333,7 +333,7 @@ zKeyval MultiLevelzTable[] = {
 			{ TEXT_KEY( "metadata" ), TABLE_VALUE( )         },
 				{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 					{ TEXT_KEY( "skyline" ), BLOB_VALUE( "CA" ) },
-					{ TEXT_KEY( "population" ), INT_VALUE( 870887 ) },
+					{ TEXT_KEY( "population" ), INT_VALUE( 350001 ) },
 					{ TEXT_KEY( "landmarks" ), TABLE_VALUE( )         },
 						{ INT_KEY( 0 )       , TABLE_VALUE( )         },
 							{ TEXT_KEY( "name" ),  TEXT_VALUE( "North Carolina Museum of Art" ) },
@@ -525,7 +525,8 @@ int get_count ( zKeyval *kv ) {
 
 zTable *convert_lkv ( zKeyval *kv ) {
 	zTable *t = malloc( sizeof( zTable ) );
-	lt_init( t, NULL, get_count( kv ) );
+//fprintf( stderr, "count: %d\n", get_count( kv ) );
+	lt_init( t, NULL, get_count( kv ) * 2 );
 
 	while ( *kv->hash != LKV_TERM ) {
 		if ( kv->key.type == ZTABLE_TXT )
@@ -596,13 +597,11 @@ struct Test {
 struct Test tests[] = {
 	//Expected failure should also be listed here
 	{ NozTable, "NO_MATCHES", "No matches found anywhere." },
-#if 0
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
 	{ NozTable, "TABLE_NONE", "Template values with no tables." },
 	{ SinglezTable, "TABLE_SINGLE", "one level table" },
 	{ DoublezTableAlpha, "TABLE_DOUBLE", "two level table | key value test" },
 	{ MultiLevelzTable, "TABLE_TRIPLE", "three level table | key value test" },
-#endif
 #if 0
 	{ NozTable, "TABLE_NONE_FAIL", "Template values with no tables and a bad input source." },
 	{ NozTable, "TABLE_NONE_REALWORLD", "Template values with no tables and <style> tag at the top." },
@@ -680,7 +679,6 @@ int main (int argc, char *argv[]) {
 	#if 1
 	//Check that each test corresponds to a test name
 	for ( int i = 0; i<sizeof(cli_test_array) / sizeof(char *) && cli_test_array[i]; i++ ) {
-		fprintf( stderr, "%s\n", cli_test_array[ i ] );
 		struct Test *tt = tests;
 		int is_test = 0;
 		for ( ; tt->kvset; tt++ ) {
@@ -700,14 +698,36 @@ int main (int argc, char *argv[]) {
 	struct Test *t = tests;
 
 	while ( t->kvset ) {
+		//Reset user specified tests
+		if ( *cli_test_array ) {
+			char **usertest = cli_test_array;
+			char *testname = NULL;
+			while ( *usertest ) {
+				if ( strcmp( t->name, *usertest ) == 0 ) {
+					testname = *usertest;
+					break;
+				}	
+				usertest++;
+			}	
+			if ( !testname ) {
+				t++;
+				continue;
+			}
+		}
+
+		//Initialize table and data needed for the test
 		zTable *tt = convert_lkv( t->kvset );
-#if 1
+#if 0
+lt_dump( tt );
+int a = lt_geti( tt, "cities.0.desc" );
+fprintf( stderr, "got hash: %d\n", a );
+t++;
+continue;
+#endif
+
 		zRender *rz = zrender_init();
 		zrender_set_default_dialect( rz );
 		zrender_set_fetchdata( rz, tt );
-		
-		//Reset user specified tests
-		char **ustests = cli_test_array;
 
 		//Load both t files
 		t->src = read_file( t->name, "tests/src" ); 
@@ -715,7 +735,7 @@ int main (int argc, char *argv[]) {
 		t->clen = strlen( t->cmp );
 
 		//Dump
-		fprintf( stderr, "%-40s:", t->name );
+		fprintf( stderr, "%-40s: ", t->name );
 		
 		//Dump
 		if ( verbose ) {
@@ -750,13 +770,14 @@ int main (int argc, char *argv[]) {
 	#endif
 
 		if ( t->cmp ) {
-			if ( t->dlen != t->clen || memcmp( t->dest, t->cmp, t->dlen ) != 0 ) {
+			if ( t->dlen != t->clen || memcmp( (char *)t->dest, t->cmp, t->dlen ) != 0 ) {
 				( verbose ) ? fprintf( stderr, "TEST '%s' ", t->name ) : 0;
 				fprintf( stderr, "%s\n", "FAILED" );
 				if ( verbose ) {
 					fprintf( stderr, "EXPECTED:\n" );
-					fprintf( stderr, "LEN: %d, LEN2: %d, MEMCMP: %d\n", t->dlen, t->clen, 
-						memcmp( t->dest, t->cmp, t->dlen ) ); 
+					fprintf( stderr, "LEN: %d, LEN2: %d, ", t->dlen, t->clen );
+					int len = ( t->dlen > t->clen ) ? t->clen : t->dlen;
+					fprintf( stderr, "MEMCMP: %d\n", memcmp( (char *)t->dest, t->cmp, len ) ); 
 					write_unsigned( (unsigned char *)t->cmp, t->clen );
 				}	
 				if ( exitf ) {
@@ -775,11 +796,12 @@ int main (int argc, char *argv[]) {
 		free( tt );
 		free( (void *)t->src );
 		( t->cmp ) ? free( (void *)t->cmp ) : 0;
+
+		//If running many tests, this can be useful
 		if ( pause ) {
 			fprintf( stderr, "Press [Enter] to continue...\n" );
 			getchar();
 		}
-#endif
 		t++;
 	}
 	return 0;
